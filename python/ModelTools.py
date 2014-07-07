@@ -53,6 +53,7 @@ class ModelBuilderBase():
         if self.options.bin: self.out.defineSet(name,vars)
         else: self.out.write("%s = set(%s);\n" % (name,vars));
     def doObj(self,name,type,X):
+	print "DEBUG AMARINI: factory: ","%s::%s(%s)" % (type, name, X)
         if self.options.bin: return self.factory_("%s::%s(%s)" % (type, name, X));
         else: self.out.write("%s = %s(%s);\n" % (name, type, X))
     def addDiscrete(self,var):
@@ -91,6 +92,7 @@ class ModelBuilder(ModelBuilderBase):
         globalobs = []
 	for cpar in self.DC.discretes: self.addDiscrete(cpar) 
         for (n,nofloat,pdf,args,errline) in self.DC.systs: 
+	    print "DEBUG AMARINI: Considering Nuisance:",n,"pdf=",pdf
             if pdf == "lnN" or pdf.startswith("shape"):
                 r = "-4,4" if pdf == "shape" else "-7,7"
                 sig = 1.0;
@@ -106,6 +108,12 @@ class ModelBuilder(ModelBuilderBase):
                 if self.options.bin:
                   self.out.var("%s_In" % n).setConstant(True)
                 if self.options.optimizeBoundNuisances: self.out.var(n).setAttribute("optimizeBounds")
+            elif pdf =="regularization":
+                delta=float(args[0])
+		bins=','.join(args[1:])
+                #self.doObj("%s_Pdf"%n,"RooRegularization","\"%s\",\"Regularization\",%f,\"%s\""%(n,delta,bins));
+                self.doObj("%s_Pdf"%n,"RooRegularization","%s, Regularization, %f, \"%s\""%(n,delta,bins));
+		print "Created pdf: %s_Pdf for regularization"%n
             elif pdf == "gmM":
                 val = 0;
                 for c in errline.values(): #list channels

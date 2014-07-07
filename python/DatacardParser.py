@@ -55,6 +55,7 @@ def parseCard(file, options):
         raise RuntimeError, "You should pass as argument to parseCards a file object, stream or a list of lines, not a string"
     ret = Datacard()
     ret.discretes=[]
+    #ret.reg=[]
     #
     nbins      = -1; 
     nprocesses = -1; 
@@ -179,6 +180,10 @@ def parseCard(file, options):
                 args = f[2:]
                 ret.discretes.append(lsyst)
                 continue
+	    elif pdf == "regularization": ## regularization strength 0 1 2 3 4 (Bin to regularize)
+		args = f[2:]
+		ret.systs.append((lsyst,nofloat,pdf,args,errline))
+		continue
             else:
                 raise RuntimeError, "Unsupported pdf %s" % pdf
             if len(numbers) < len(ret.keyline): raise RuntimeError, "Malformed systematics line %s of length %d: while bins and process lines have length %d" % (lsyst, len(numbers), len(ret.keyline))
@@ -221,7 +226,7 @@ def parseCard(file, options):
     syst2 = []
     for lsyst,nofloat,pdf,args,errline in ret.systs:
         nonNullEntries = 0 
-        if pdf == "param" or pdf=="discrete": # this doesn't have an errline
+        if pdf == "param" or pdf=="discrete" or pdf=="regularization": # this doesn't have an errline
             syst2.append((lsyst,nofloat,pdf,args,errline))
             continue
         for (b,p,s) in ret.keyline:
