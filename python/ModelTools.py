@@ -111,9 +111,16 @@ class ModelBuilder(ModelBuilderBase):
             elif pdf =="regularization":
                 delta=float(args[0])
 		bins=','.join(args[1:])
-                #self.doObj("%s_Pdf"%n,"RooRegularization","\"%s\",\"Regularization\",%f,\"%s\""%(n,delta,bins));
-                self.doObj("%s_Pdf"%n,"RooRegularization","%s, Regularization, %f, \"%s\""%(n,delta,bins));
-		print "Created pdf: %s_Pdf for regularization"%n
+		self.doVar("deltaRegConst[%f]"%delta)
+		self.out.var("deltaRegConst").Print()
+		#self.out.var("deltaRegConst").setConstant()
+		binsConst=re.sub('r_Bin([0-9]*)','BinRegConst\\1[\\1]',bins)
+		print "DEBUG AMARINI: creating regularization with line","deltaRegConst[%f], %s"%(delta,binsConst)
+		for bin in binsConst.split(','):
+			self.doVar(bin)
+			#self.out.var(re.sub('\\[.*\\]','',bin) ).setConstant()
+		self.doObj("%s_Pdf"%n,"RooRegularization", "deltaRegConst[%f], {%s}"%(delta,re.sub('r_Bin([0-9]*)','BinRegConst\\1[\\1]',bins)));
+		print "DEBUG AMARINI: Created pdf: %s_Pdf for regularization"%n
             elif pdf == "gmM":
                 val = 0;
                 for c in errline.values(): #list channels
