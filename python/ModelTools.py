@@ -111,16 +111,27 @@ class ModelBuilder(ModelBuilderBase):
             elif pdf =="regularization":
                 delta=float(args[0])
 		bins=','.join(args[1:])
-		self.doVar("deltaRegConst[%f]"%delta)
-		self.out.var("deltaRegConst").Print()
-		#self.out.var("deltaRegConst").setConstant()
-		binsConst=re.sub('r_Bin([0-9]*)','BinRegConst\\1[\\1]',bins)
-		print "DEBUG AMARINI: creating regularization with line","deltaRegConst[%f], %s"%(delta,binsConst)
-		for bin in binsConst.split(','):
-			self.doVar(bin)
-			#self.out.var(re.sub('\\[.*\\]','',bin) ).setConstant()
-		self.doObj("%s_Pdf"%n,"RooRegularization", "deltaRegConst[%f], {%s}"%(delta,re.sub('r_Bin([0-9]*)','BinRegConst\\1[\\1]',bins)));
+		#construct the matrix
+		RegStr="%f*("%delta
+		N=len(bins.split(','))
+		for binI in range(0,N):
+		   if(binI >0 ): RegStr+="+"
+		   newStr=""
+		   for binJ in range(0,N):
+		   	if (binI==0 or binI==N-1) and binI==binJ: newStr+="-1*%s"%bins.split(',')[binJ]
+			elif(binI==binJ):newStr+="-2.*%s"%bins.split(',')[binJ]
+			elif( abs(binI-binJ)==1):newStr+="+1.*%s"%bins.split(',')[binJ]
+		   #do sqr
+		   RegStr+="(("+newStr+")*("+newStr+"))"
+		RegStr+=")"
+		RegStr = "'"+RegStr+"',"+bins
+		print "DEBUG AMARINI: Creating EXPR str:",RegStr
+		self.doObj("%s_Pdf"%n,"expr",RegStr)
+		#self.doObj("%s_Pdf"%n,"EXPR",RegStr)
 		print "DEBUG AMARINI: Created pdf: %s_Pdf for regularization"%n
+		self.out.function("%s_Pdf"%n).Print()
+		for bin in bins.split(','):
+			self.out.var(bin).Print()
             elif pdf == "gmM":
                 val = 0;
                 for c in errline.values(): #list channels
@@ -244,8 +255,9 @@ class ModelBuilder(ModelBuilderBase):
             nuisPdfs = ROOT.RooArgList()
             nuisVars = ROOT.RooArgSet()
             for (n,nf,p,a,e) in self.DC.systs:
-                nuisVars.add(self.out.var(n))
-                nuisPdfs.add(self.out.pdf(n+"_Pdf"))
+		 if p != "regularization":
+                	nuisVars.add(self.out.var(n))
+                	nuisPdfs.add(self.out.pdf(n+"_Pdf"))
             self.out.defineSet("nuisances", nuisVars)
             self.out.nuisPdf = ROOT.RooProdPdf("nuisancePdf", "nuisancePdf", nuisPdfs)
             self.out._import(self.out.nuisPdf)

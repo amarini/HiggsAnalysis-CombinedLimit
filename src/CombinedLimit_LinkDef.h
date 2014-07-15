@@ -22,7 +22,6 @@
 #include "../interface/RooMultiPdf.h"
 #include "../interface/RooBernsteinFast.h"
 #include "../interface/SimpleGaussianConstraint.h"
-#include "../interface/RooRegularization.h"
 
 #ifdef __CINT__
 #pragma link off all globals;
@@ -105,7 +104,6 @@
 #pragma link C++ class RooGaussStepBernstein+;
 #pragma link C++ class rVrFLikelihood+;
 #pragma link C++ class RooMultiPdf+;
-#pragma link C++ class RooRegularization+;
 #pragma link C++ class RooBernsteinFast<1>+;
 #pragma link C++ class RooBernsteinFast<2>+;
 #pragma link C++ class RooBernsteinFast<3>+;
