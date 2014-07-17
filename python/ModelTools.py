@@ -53,7 +53,7 @@ class ModelBuilderBase():
         if self.options.bin: self.out.defineSet(name,vars)
         else: self.out.write("%s = set(%s);\n" % (name,vars));
     def doObj(self,name,type,X):
-	print "DEBUG AMARINI: factory: ","%s::%s(%s)" % (type, name, X)
+	#print "DEBUG AMARINI: factory: ","%s::%s(%s)" % (type, name, X)
         if self.options.bin: return self.factory_("%s::%s(%s)" % (type, name, X));
         else: self.out.write("%s = %s(%s);\n" % (name, type, X))
     def addDiscrete(self,var):
@@ -92,7 +92,7 @@ class ModelBuilder(ModelBuilderBase):
         globalobs = []
 	for cpar in self.DC.discretes: self.addDiscrete(cpar) 
         for (n,nofloat,pdf,args,errline) in self.DC.systs: 
-	    print "DEBUG AMARINI: Considering Nuisance:",n,"pdf=",pdf
+	    #print "DEBUG AMARINI: Considering Nuisance:",n,"pdf=",pdf
             if pdf == "lnN" or pdf.startswith("shape"):
                 r = "-4,4" if pdf == "shape" else "-7,7"
                 sig = 1.0;
@@ -112,7 +112,8 @@ class ModelBuilder(ModelBuilderBase):
                 delta=float(args[0])
 		bins=','.join(args[1:])
 		#construct the matrix
-		RegStr="%f*("%delta
+		####################################  CURVATURE #######################
+		RegStr="TMath::Exp(%f*("%delta
 		N=len(bins.split(','))
 		for binI in range(0,N):
 		   if(binI >0 ): RegStr+="+"
@@ -123,12 +124,21 @@ class ModelBuilder(ModelBuilderBase):
 			elif( abs(binI-binJ)==1):newStr+="+1.*%s"%bins.split(',')[binJ]
 		   #do sqr
 		   RegStr+="(("+newStr+")*("+newStr+"))"
-		RegStr+=")"
+		RegStr+=") )"
+		################################### UNITY OPERATOR: ONLY FOR TEST ###################################
+		#print "################## WARING: REGULARITAZION OPERATOR is 1 ###############"
+		#RegStr="TMath::Exp(%f*("%delta
+		#N=len(bins.split(','))
+		#for binI in range(0,N):
+		#	if binI !=0: RegStr+="+"
+		#	RegStr+="(%s-1.)*(%s-1.)"%(bins.split(',')[binI],bins.split(',')[binI])
+		#RegStr+=") )"
+		######################################################################
 		RegStr = "'"+RegStr+"',"+bins
-		print "DEBUG AMARINI: Creating EXPR str:",RegStr
-		self.doObj("%s_Pdf"%n,"expr",RegStr)
+		#print "DEBUG AMARINI: Creating EXPR str:",RegStr
+		self.doObj("%s_Pdf"%n,"EXPR",RegStr)
 		#self.doObj("%s_Pdf"%n,"EXPR",RegStr)
-		print "DEBUG AMARINI: Created pdf: %s_Pdf for regularization"%n
+		#print "DEBUG AMARINI: Created pdf: %s_Pdf for regularization"%n
 		self.out.function("%s_Pdf"%n).Print()
 		for bin in bins.split(','):
 			self.out.var(bin).Print()
@@ -257,7 +267,7 @@ class ModelBuilder(ModelBuilderBase):
             for (n,nf,p,a,e) in self.DC.systs:
 		 if p != "regularization":
                 	nuisVars.add(self.out.var(n))
-                	nuisPdfs.add(self.out.pdf(n+"_Pdf"))
+                 nuisPdfs.add(self.out.pdf(n+"_Pdf"))
             self.out.defineSet("nuisances", nuisVars)
             self.out.nuisPdf = ROOT.RooProdPdf("nuisancePdf", "nuisancePdf", nuisPdfs)
             self.out._import(self.out.nuisPdf)
