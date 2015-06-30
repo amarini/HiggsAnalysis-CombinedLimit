@@ -39,6 +39,8 @@ bool MultiDimFit::loadedSnapshot_ = false;
 bool MultiDimFit::hasMaxDeltaNLLForProf_ = false;
 bool MultiDimFit::squareDistPoiStep_ = false;
 float MultiDimFit::maxDeltaNLLForProf_ = 200;
+bool  MultiDimFit::saveFitResult_ = false;
+bool  MultiDimFit::doHesse_ = false;
 
 
 MultiDimFit::MultiDimFit() :
@@ -54,6 +56,8 @@ MultiDimFit::MultiDimFit() :
         ("lastPoint",  boost::program_options::value<unsigned int>(&lastPoint_)->default_value(lastPoint_), "Last point to use")
         ("fastScan", "Do a fast scan, evaluating the likelihood without profiling it.")
         ("maxDeltaNLLForProf",  boost::program_options::value<float>(&maxDeltaNLLForProf_)->default_value(maxDeltaNLLForProf_), "Last point to use")
+        ("saveFitResult",       "Save fit results in output file")
+        ("doHesse",       "Save fit results in output file")
        ;
 }
 
@@ -81,6 +85,9 @@ void MultiDimFit::applyOptions(const boost::program_options::variables_map &vm)
     squareDistPoiStep_ = (vm.count("squareDistPoiStep") > 0);
     hasMaxDeltaNLLForProf_ = !vm["maxDeltaNLLForProf"].defaulted();
     loadedSnapshot_ = !vm["snapshotName"].defaulted();
+	
+    saveFitResult_ = vm.count("saveFitResult");
+    doHesse_ = vm.count("doHesse");
 }
 
 bool MultiDimFit::runSpecific(RooWorkspace *w, RooStats::ModelConfig *mc_s, RooStats::ModelConfig *mc_b, RooAbsData &data, double &limit, double &limitErr, const double *hint) { 
@@ -106,7 +113,7 @@ bool MultiDimFit::runSpecific(RooWorkspace *w, RooStats::ModelConfig *mc_s, RooS
     const RooCmdArg &constrainCmdArg = withSystematics  ? RooFit::Constrain(*mc_s->GetNuisanceParameters()) : RooCmdArg();
     std::auto_ptr<RooFitResult> res;
     if ( algo_ == Singles || !loadedSnapshot_ ){
-    	res.reset(doFit(pdf, data, (algo_ == Singles ? poiList_ : RooArgList()), constrainCmdArg, false, 1, true, false)); 
+    	res.reset(doFit(pdf, data, (algo_ == Singles ? poiList_ : RooArgList()), constrainCmdArg, doHesse_, 1, true, saveFitResult_)); 
     }
     if ( loadedSnapshot_ || res.get() || keepFailures_) {
         for (int i = 0, n = poi_.size(); i < n; ++i) {

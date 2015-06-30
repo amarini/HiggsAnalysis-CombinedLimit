@@ -20,6 +20,8 @@ public:
     return name;
   }
   virtual void applyOptions(const boost::program_options::variables_map &vm) ;
+  static bool saveFitResult_;
+  static bool doHesse_;
 
 protected:
   virtual bool runSpecific(RooWorkspace *w, RooStats::ModelConfig *mc_s, RooStats::ModelConfig *mc_b, RooAbsData &data, double &limit, double &limitErr, const double *hint);
