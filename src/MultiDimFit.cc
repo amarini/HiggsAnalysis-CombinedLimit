@@ -1,6 +1,7 @@
 #include "../interface/MultiDimFit.h"
 #include <stdexcept>
 #include <cmath>
+#include <iostream>
 
 #include "TMath.h"
 #include "RooArgSet.h"
@@ -14,6 +15,7 @@
 #include "../interface/CascadeMinimizer.h"
 #include "../interface/CloseCoutSentry.h"
 #include "../interface/utils.h"
+#include "TFile.h"
 
 #include <Math/Minimizer.h>
 #include <Math/MinimizerOptions.h>
@@ -130,6 +132,12 @@ bool MultiDimFit::runSpecific(RooWorkspace *w, RooStats::ModelConfig *mc_s, RooS
     
     //set snapshot for best fit
     if (!loadedSnapshot_) w->saveSnapshot("MultiDimFit",w->allVars());
+
+    std::cout<<" DEBUG: SAVE FIT RESULT = "<<saveFitResult_<<std::endl;
+    if (saveFitResult_) {
+          std::cout <<"DEBUG: Writing :"<<writeToysHere->GetFile()->GetName()<< "|"<<writeToysHere->GetFile()->GetTitle()<<std::endl;
+        writeToysHere->GetFile()->WriteTObject(res.release(),  "fit_nominal"  );
+    }
     
     switch(algo_) {
         case None: 
@@ -152,6 +160,7 @@ bool MultiDimFit::runSpecific(RooWorkspace *w, RooStats::ModelConfig *mc_s, RooS
         case Contour2D: doContour2D(*nll); break;
         case Stitch2D: doStitch2D(*nll); break;
     }
+
     
     return true;
 }
