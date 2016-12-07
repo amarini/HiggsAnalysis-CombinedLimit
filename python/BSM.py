@@ -372,7 +372,9 @@ class BSM(PhysicsModel):
         self.modelBuilder.factory_('expr::Scaling_HpTauNu("@0*@1*@2", r,xs_Hp,br_Hp_taunu)')
         self.modelBuilder.factory_('expr::Scaling_HpTopBottom("@0*@1*@2", r,xs_Hp,br_Hp_tb)')
 
-        self.processScaling = { 'tobbottom':'HpTobBottom', 'taunu':'HpTauNu' }
+	self.processScaling = { 'tobbottom':'HpTobBottom', 
+			'taunu':'HpTauNu',"Hptntj":"HpTauNu" 
+			}
 
 	if self._debug>1:
         	self.modelBuilder.out.Print()
