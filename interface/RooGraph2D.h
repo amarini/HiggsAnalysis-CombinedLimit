@@ -37,6 +37,9 @@ public:
 	// clone
 	TObject*clone(const char*newname) const;
 
+	// return store d graph, preserve ownership
+	TGraph2D* getGraph(){ return _g;} 
+
 	ClassDef(RooGraph2D,1)
 };
 
