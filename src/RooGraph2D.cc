@@ -20,6 +20,9 @@ RooGraph2D::RooGraph2D( const char*name, const char*title,
 {
 	//_g.reset(g); // takes ownership
 	_g=g;
+	
+	// trigger the construction of the interpolation system. Not sure it will be saved.
+	_g->Interpolate(10.,10.);
 }
 
 //Copy constructor
