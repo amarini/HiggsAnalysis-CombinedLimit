@@ -10,6 +10,8 @@
 #define ROO_GRAPH2D
 
 #include "TGraph2D.h"
+// this should avoid to recompute the delaunay triangulation each time
+#include "TGraphDelaunay.h"
 #include "RooAbsReal.h"
 #include "RooRealProxy.h"
 #include <memory>
@@ -20,6 +22,7 @@ private:
 	RooRealProxy _xvar, _yvar;
 	//std::unique_ptr<TGraph2D> _g;
 	TGraph2D* _g{NULL};
+	//TGraphDelaunay* _g{NULL};
 protected:
 	Double_t evaluate() const;
 public:
@@ -39,6 +42,7 @@ public:
 
 	// return store d graph, preserve ownership
 	TGraph2D* getGraph(){ return _g;} 
+	//TGraphDelaunay* getGraph(){ return _g;} 
 
 	ClassDef(RooGraph2D,1)
 };

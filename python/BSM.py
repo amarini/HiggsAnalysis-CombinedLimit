@@ -52,6 +52,13 @@ class BSM(PhysicsModel):
             self._printString("Setting mhmodm scenario")
             self._filename="mhmodm_13TeV.root"
             self._dbname="mhmodm.dat2"
+        elif what == "mhmodm-feynhiggs":
+            self._printString("Setting mhmodm-feynhigs scenario")
+            self._filename="feynhiggs/mhmodm_13TeV.root"
+            self._dbname=""
+            self._doDeltaBeta=False
+            self._txtname=""
+            self._xstoget . append("xs_Hp") # xs_gg_A see root file, 
         elif what == "mhmodp":
             self._printString("Setting mhmodp scenario")
             self._filename="mhmodp_mu200_13TeV.root"
@@ -304,21 +311,30 @@ class BSM(PhysicsModel):
         
         self._printString("Constructing tgraph for '"+name+"' xvar=" + xvar + " yvar=" + yvar,2)
         
-        g=ROOT.TGraph2D( ) 
-        g.SetName("graph2d_"+name)
-        
-        for xBin in range(1,th2.GetNbinsX()+1):
-            for yBin in range(1,th2.GetNbinsY()+1):
-                y = th2.GetYaxis().GetBinCenter(yBin)
-                x = th2.GetXaxis().GetBinCenter(xBin)
-                z = th2.GetBinContent(xBin,yBin)
-                if inversion:
-                    self._printString("* Filling '"+name+"' with " + str(z) + "," + str(y) + " -> " + str(x),3)
-                    g.SetPoint(g.GetN(), z,y,x)
-                else:
-                    self._printString("* Filling '"+name+"' with " + str(x) + "," + str(y) + " -> " + str(z),3)
-                    g.SetPoint(g.GetN(), x,y,z)
-        
+	if th2.InheritsFrom("TGraph2D"):
+	     if inversion:
+		g=ROOT.TGraph2D()
+        	g.SetName("graph2d_"+name)
+		for i in range(0,th2.GetN()):
+			g.SetPoint( i, th2.GetZ()[i],th2.GetY()[i],th2.GetX()[i])
+	     else:
+		g=th2.Clone()
+	else:
+        	g=ROOT.TGraph2D( ) 
+        	g.SetName("graph2d_"+name)
+        	
+        	for xBin in range(1,th2.GetNbinsX()+1):
+        	    for yBin in range(1,th2.GetNbinsY()+1):
+        	        y = th2.GetYaxis().GetBinCenter(yBin)
+        	        x = th2.GetXaxis().GetBinCenter(xBin)
+        	        z = th2.GetBinContent(xBin,yBin)
+        	        if inversion:
+        	            self._printString("* Filling '"+name+"' with " + str(z) + "," + str(y) + " -> " + str(x),3)
+        	            g.SetPoint(g.GetN(), z,y,x)
+        	        else:
+        	            self._printString("* Filling '"+name+"' with " + str(x) + "," + str(y) + " -> " + str(z),3)
+        	            g.SetPoint(g.GetN(), x,y,z)
+        	
         xv=self.modelBuilder.out.var(xvar)
         yv=self.modelBuilder.out.var(yvar)
         if xv==None: xv= self.modelBuilder.out.function(xvar)

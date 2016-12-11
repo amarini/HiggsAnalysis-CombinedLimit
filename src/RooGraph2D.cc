@@ -20,9 +20,11 @@ RooGraph2D::RooGraph2D( const char*name, const char*title,
 {
 	//_g.reset(g); // takes ownership
 	_g=g;
+	//_g=new TGraphDelaunay(g);
 	
 	// trigger the construction of the interpolation system. Not sure it will be saved.
 	_g->Interpolate(10.,10.);
+	//((TGraphDelaunay2D*)fDelaunay)->ComputeZ(x, y);
 }
 
 //Copy constructor
@@ -31,8 +33,8 @@ RooGraph2D::RooGraph2D(const RooGraph2D &other, const char*newname):
 	_xvar("xvar",this,other._xvar),
 	_yvar("yvar",this,other._yvar)
 {
-	//_g.reset( (TGraph2D*)other._g->Clone(Form("g2_%s",newname)) );
 	_g = (TGraph2D*)other._g->Clone(Form("g2_%s",newname));
+	//_g = (TGraphDelaunay*)other._g->Clone(Form("g2_%s",newname));
 }
 
 TObject *RooGraph2D::clone(const char *newname) const 
@@ -42,6 +44,7 @@ TObject *RooGraph2D::clone(const char *newname) const
 
 Double_t RooGraph2D::evaluate() const {
 	return _g->Interpolate( _xvar,_yvar ) ;
+	//return _g->ComputeZ( _xvar, _yvar);
 }
 
 ClassImp(RooGraph2D)
