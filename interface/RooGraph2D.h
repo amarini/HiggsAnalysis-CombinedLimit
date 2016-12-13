@@ -42,6 +42,7 @@ public:
 
 	// return store d graph, preserve ownership
 	TGraph2D* getGraph(){ return _g;} 
+	//TGraph2D* getGraph(){ return _g->GetGraph2D();} 
 	//TGraphDelaunay* getGraph(){ return _g;} 
 
 	ClassDef(RooGraph2D,1)
