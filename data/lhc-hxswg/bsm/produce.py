@@ -7,6 +7,7 @@ import time
 import math
 from optparse import OptionParser, OptionGroup
 #############
+#file="mhmodm-LHCHXSWG.in"
 file="mhmodm-LHCHXSWG.in"
 m0=180
 m1=1000
@@ -24,6 +25,13 @@ parser.add_option("","--no-feyn",dest="do_feyn",action='store_false',help="do th
 threads=[]
 masses=[]
 tbs=[]
+
+def printPartial(n,tot):
+	k=30
+	f = int(float(n)/tot*k)
+	line="\r["+ ("*"*f) + (" "*(k-f)) + "] = %.1f%%"%(float(n)/tot*100) 
+	print line,
+	sys.stdout.flush()
 
 
 def drange(start, stop, step):
@@ -43,7 +51,7 @@ def prange(start, stop, step):
                 yield r
                 r *= step
 
-masses =  [x for x in prange(m0,m1,math.pow(m1/m0,1./400.))] + [200,300,400,500,750,1000,2000,2500,3000]
+masses =  [x for x in prange(m0,m1,math.pow(m1/m0,1./400.))] + [-200,-300,-400,-500,-750,-1000,-2000,-2500,-3000]
 tbs= [x for x in drange(0,1,.05)] + [x for x in drange(tb0,tb1,.5)]
 
 print "MASSES=",masses
@@ -58,6 +66,9 @@ def parallel(tb,m,counter):
 	dest = "%s/%s"% (dir,fname)
 	call("cp -v %s %s"%(file,dest) ,shell=True) 
 	call("sed -i'' 's/\(^TB\ *\)[0-9]*/\\1%f/' %s"%(tb,dest),shell=True)
+	if (m<0):
+		call("echo 'MHp          %.1f'>> %s"%(-m,dest),shell=True)
+	if m<0: m=-1
 	call("sed -i'' 's/\(^MA0\ *\)[0-9]*/\\1%f/' %s"%(m,dest),shell=True)
 	call("cd %s && ./FeynHiggs %s > %s.feyn"%(dir,fname,fname),shell=True)
 
@@ -74,7 +85,10 @@ if opts.do_feyn:
 	threads.append(t)
 	counter+=1
 
-for t in threads:
+print "* joining threads"
+N=len(threads)
+for idx,t in enumerate(threads):
+   	if idx%10 == 0:	printPartial(idx,N)
 	t.join()
 
 print "Done p1"
@@ -91,6 +105,9 @@ fOut=ROOT.TFile.Open("./%s_13TeV.root"%out,"RECREATE")
 gMHp=ROOT.TGraph2D()
 gMHp.SetName("m_Hp")
 
+gMh0=ROOT.TGraph2D()
+gMh0.SetName("m_h0")
+
 gBRtaunu=ROOT.TGraph2D()
 gBRtaunu.SetName("br_Hp_taunu")
 
@@ -100,13 +117,9 @@ gBRtb.SetName("br_Hp_tb")
 gXSHp=ROOT.TGraph2D()
 gXSHp.SetName("xs_Hp")
 
+gDeltaBeta=ROOT.TGraph2D()
+gDeltaBeta.SetName("db")
 
-def printPartial(n,tot):
-	k=30
-	f = int(float(n)/tot*k)
-	line="\r["+ ("*"*f) + (" "*(k-f)) + "] = %.1f%%"%(float(n)/tot*100) 
-	print line,
-	sys.stdout.flush()
 
 for idx,f in enumerate(l):
    if idx%10 == 0:	printPartial(idx,len(l))
@@ -121,6 +134,8 @@ for idx,f in enumerate(l):
 	cmd["brtn"]="cat "+f+"| grep -i '%| Hp-nu_tau-tau'"
 	cmd["brtb"]="cat "+f+"| grep -i '%| Hp-t-b'"
 	cmd["xshp"]="cat "+f+"| grep -i 'prod:alt-t-Hp'"
+	cmd["mh0"]="cat "+f+"| grep '| Mh0' | tail -n -1"
+	cmd["deltab"]="cat "+f+"| grep '| Deltab' | tail -n -1"
 	try:
 	   ignore  = call(cmd["ignore"],shell=True)
 	except:
@@ -140,6 +155,10 @@ for idx,f in enumerate(l):
 	   mhp=float(check_output(cmd["mhp"],shell=True).split()[3])
 	except:
 	   mhp=float(check_output(cmd["mhp"],shell=True).split()[3])
+	try:
+	   mh0=float(check_output(cmd["mh0"],shell=True).split()[3])
+	except:
+	   mh0=float(check_output(cmd["mh0"],shell=True).split()[3])
 	try:
 	   tb=float(check_output(cmd["tb"],shell=True).split()[3])
 	except:
@@ -162,10 +181,16 @@ for idx,f in enumerate(l):
 	   xs_Hp = float(check_output(cmd["xshp"] ,shell=True).split()[3].replace("-","E-")) / 1000.
 	except:
 	   xs_Hp = float(check_output(cmd["xshp"] ,shell=True) .split()[3]) / 1000.
-        gXSHp.SetPoint(gXSHp.GetN(), ma, tb, xs_Hp)
+	try:
+	   deltab = float(check_output(cmd["deltab"],shell=True ) .split()[4])
+	except:
+	   deltab = float(check_output(cmd["deltab"],shell=True ) .split()[4])
+        gXSHp.SetPoint(gXSHp.GetN(), ma, tb, xs_Hp *2 ) ## Hm only, we need both Hp and Hm
         gBRtb.SetPoint(gBRtb.GetN(), ma, tb, br_tb)
         gBRtaunu.SetPoint(gBRtaunu.GetN(), ma, tb, br_taunu)
         gMHp.SetPoint(gMHp.GetN(), ma, tb , mhp)
+        gMh0.SetPoint(gMHp.GetN(), ma, tb , mh0)
+        gDeltaBeta.SetPoint(gMHp.GetN(), ma, tb , deltab)
    except Exception as e:
 	print "Got exception",e,"with cmd",cmd
 	print "Ignoring this file"
@@ -176,5 +201,7 @@ gXSHp.Write()
 gBRtaunu.Write()
 gBRtb.Write()
 gMHp.Write()
+gDeltaBeta.Write()
+gMh0.Write()
 
 print "Done p2"

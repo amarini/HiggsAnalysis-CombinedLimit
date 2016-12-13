@@ -56,9 +56,10 @@ class BSM(PhysicsModel):
             self._printString("Setting mhmodm-feynhigs scenario")
             self._filename="feynhiggs/mhmodm_13TeV.root"
             self._dbname=""
-            self._doDeltaBeta=False
             self._txtname=""
+            self._doDeltaBeta=True
             self._xstoget . append("xs_Hp") # xs_gg_A see root file, 
+            self._brtoget . append("db") # db
         elif what == "mhmodp":
             self._printString("Setting mhmodp scenario")
             self._filename="mhmodp_mu200_13TeV.root"
@@ -144,7 +145,15 @@ class BSM(PhysicsModel):
         ## get xsections
         for xs in self._xstoget:
             h_xs = self._getObj(fIn,xs)
-            self._th2Interp(h_xs,xs,"mA","tb")
+	    if xs== "xs_Hp" and self._doDeltaBeta:
+		#   
+		## assume that 
+		if self._txtname != "": self._printString("Error txt name !=NULL and reading cross section with delta beta",-1)
+        	self.modelBuilder.factory_('expr::tbeff("@0/TMath::Sqrt(1+@1)",tb,db)')
+            	self._th2Interp(h_xs,xs + "_bare","mA","tbeff")
+                self.modelBuilder.factory_('expr::xs_Hp("@0/(1+@1)", xs_Hp_bare,db)')
+	    else:
+            	self._th2Interp(h_xs,xs,"mA","tb")
         
         return self
 
@@ -250,8 +259,8 @@ class BSM(PhysicsModel):
         """ Read deltabeta corrections from a txt. For Hpm only."""
         if not self._doDeltaBeta : return self
         if self._dbname == "" : 
-            self._doDeltaBeta=False
-            self._printString("No DB corrections given. Setting DeltaBeta=False",0)
+            #self._doDeltaBeta=False
+            self._printString("No txt DB corrections given. (correct if reading from root file)",0)
             return  self
         
         fName= os.path.join(self._dirname, self._dbname)
