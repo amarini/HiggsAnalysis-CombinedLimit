@@ -85,9 +85,9 @@ public:
   Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const
     {
 
-      _bernvector[0] = 1.0;
-      for (int ipow=1; ipow<=N; ++ipow) {
-        _bernvector[ipow] = static_cast<RooAbsReal*>(_coefList.at(ipow-1))->getVal();
+      //_bernvector[0] = 1.0;
+      for (int ipow=0; ipow<=N; ++ipow) {
+        _bernvector[ipow] = static_cast<RooAbsReal*>(_coefList.at(ipow))->getVal();
       }     
       
       _powvector = _cmatrix*_bernvector;
@@ -114,10 +114,10 @@ protected:
   Double_t evaluate() const
     {
 
-      _bernvector[0] = 1.0;
+      //_bernvector[0] = 1.0;
       bool changed = false;
-      for (int ipow=1; ipow<=N; ++ipow) {
-        double rval = static_cast<RooAbsReal*>(_coefList.at(ipow-1))->getVal();
+      for (int ipow=0; ipow<=N; ++ipow) {
+        double rval = static_cast<RooAbsReal*>(_coefList.at(ipow))->getVal();
         if (_bernvector[ipow] != rval) {
           _bernvector[ipow] = rval;
           changed = true;
