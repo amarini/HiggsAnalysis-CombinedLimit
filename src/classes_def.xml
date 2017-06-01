@@ -39,6 +39,14 @@
 	<class name="RooBernsteinFast<5>" />
 	<class name="RooBernsteinFast<6>" />
 	<class name="RooBernsteinFast<7>" />
+	<class name="RooBernsteinFast<8>" />
+	<class name="RooBernsteinFast<9>" />
+	<class name="RooBernsteinFast<10>" />
+	<class name="RooBernsteinFast<11>" />
+	<class name="RooBernsteinFast<12>" />
+	<class name="RooBernsteinFast<13>" />
+	<class name="RooBernsteinFast<14>" />
+	<class name="RooBernsteinFast<15>" />
 	<class name="RooBetaFunc_v2" />
 	<class name="RooCB" />
 	<class name="RooCPSHighMassGGH" />

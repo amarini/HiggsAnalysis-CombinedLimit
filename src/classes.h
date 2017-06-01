@@ -43,5 +43,13 @@ namespace {
 	RooBernsteinFast<5> my_RooBernsteinFast_5;
 	RooBernsteinFast<6> my_RooBernsteinFast_6;
 	RooBernsteinFast<7> my_RooBernsteinFast_7;
+	RooBernsteinFast<8> my_RooBernsteinFast_8;
+	RooBernsteinFast<9> my_RooBernsteinFast_9;
+	RooBernsteinFast<10> my_RooBernsteinFast_10;
+	RooBernsteinFast<11> my_RooBernsteinFast_11;
+	RooBernsteinFast<12> my_RooBernsteinFast_12;
+	RooBernsteinFast<13> my_RooBernsteinFast_13;
+	RooBernsteinFast<14> my_RooBernsteinFast_14;
+	RooBernsteinFast<15> my_RooBernsteinFast_15;
     };
 }
