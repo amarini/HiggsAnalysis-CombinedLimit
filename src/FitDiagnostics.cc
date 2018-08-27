@@ -195,7 +195,7 @@ bool FitDiagnostics::runSpecific(RooWorkspace *w, RooStats::ModelConfig *mc_s, R
       RooSimultaneousOpt simNuisancePdf("simNuisancePdf", "", dummyCat);
       simNuisancePdf.addExtraConstraints(((RooProdPdf*)(nuisancePdf.get()))->pdfList());
       std::auto_ptr<RooDataSet> globalData(new RooDataSet("globalData","globalData", RooArgSet(dummyCat)));
-      std::auto_ptr<RooAbsReal> nuisanceNLL(simNuisancePdf.RooAbsPdf::createNLL(*globalData, RooFit::Constrain(*nuis)));
+      std::auto_ptr<RooAbsReal> nuisanceNLL(simNuisancePdf.RooAbsPdf::createNLL(*globalData, RooFit::Constrain(*nuis),(w->obj("NamedRange"))?RooFit::Range( ((TString*)w->obj("NamedRange"))->Data() ): RooCmdArg() ));
       RooFitResult *res_prefit = 0;
        // Fit to nuisance pdf to get fitRes for sampling
       {
@@ -243,7 +243,7 @@ bool FitDiagnostics::runSpecific(RooWorkspace *w, RooStats::ModelConfig *mc_s, R
   r->setConstant(true);
 
   // Setup Nll before calling fits;
-  if (currentToy_<1) nll.reset(mc_s->GetPdf()->createNLL(data,constCmdArg_s,RooFit::Extended(mc_s->GetPdf()->canBeExtended())));
+  if (currentToy_<1) nll.reset(mc_s->GetPdf()->createNLL(data,constCmdArg_s,RooFit::Extended(mc_s->GetPdf()->canBeExtended()),(w->obj("NamedRange"))?RooFit::Range( ((TString*)w->obj("NamedRange"))->Data()) : RooCmdArg()) );
   // Get the nll value on the prefit
   double nll0 = nll->getVal();
 

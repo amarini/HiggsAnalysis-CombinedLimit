@@ -87,6 +87,8 @@ TTree *Combine::tree_ = 0;
 std::string setPhysicsModelParameterExpression_ = "";
 std::string setPhysicsModelParameterRangeExpression_ = "";
 std::string defineBackgroundOnlyModelParameterExpression_ = "";
+std::string setFitNamedRangeExpression_ = "";
+std::string createNamedRange_ = "";
 
 std::string Combine::trackParametersNameString_="";
 std::string Combine::textToWorkspaceString_="";
@@ -117,6 +119,8 @@ Combine::Combine() :
       ("generateBinnedWorkaround", "Make binned datasets generating unbinned ones and then binnning them. Workaround for a bug in RooFit.")
       ("setParameters", po::value<string>(&setPhysicsModelParameterExpression_)->default_value(""), "Set the values of relevant physics model parameters. Give a comma separated list of parameter value assignments. Example: CV=1.0,CF=1.0")      
       ("setParameterRanges", po::value<string>(&setPhysicsModelParameterRangeExpression_)->default_value(""), "Set the range of relevant physics model parameters. Give a colon separated list of parameter ranges. Example: CV=0.0,2.0:CF=0.0,5.0")      
+      ("setFitNamedRange", po::value<string>(&setFitNamedRangeExpression_)->default_value(""), "Set Range for fits.")      
+      ("createNamedRange", po::value<string>(&createNamedRange_)->default_value(""), "Create a named Range on variable. var:name:xmin:xmax,...")      
       ("defineBackgroundOnlyModelParameters", po::value<string>(&defineBackgroundOnlyModelParameterExpression_)->default_value(""), "If no background only (null) model is explicitly provided in physics model, one will be defined as these values of the POIs (default is r=0)")      
       ("redefineSignalPOIs", po::value<string>(&redefineSignalPOIs_)->default_value(""), "Redefines the POIs to be this comma-separated list of variables from the workspace.")      
       ("freezeParameters", po::value<string>(&freezeNuisances_)->default_value(""), "Set as constant all these parameters.")      
@@ -407,6 +411,44 @@ void Combine::run(TString hlfFile, const std::string &dataset, double &limit, do
       // also allow for "discrete" parameters to be set 
       // Possible that MH value was re-set above, so make sure mass is set to the correct value and not over-ridden later.
       if (w->var("MH")) mass_ = w->var("MH")->getVal();
+    }
+
+    // *******************************************
+    // set named range information for observables
+    // *******************************************
+    if ( setFitNamedRangeExpression_!="")
+    {
+        if (createNamedRange_ !="")
+        {
+            //var:name:xmin:xmax,...
+            vector<string> ranges;
+            boost::split(ranges,createNamedRange_,boost::is_any_of(","));
+            for (auto & rangeExpression : ranges)
+            {
+                vector<string> rangeInfo;
+                boost::split(rangeInfo,rangeExpression,boost::is_any_of(":"));
+                if (rangeInfo.size() != 4) std::cout<<"Error in range:"<<rangeExpression<<": I need 4 field to create a named range"<<std::endl;
+
+                string& var=rangeInfo[0];
+                string& name=rangeInfo[1];
+                double xmin=std::stod(rangeInfo[2]);
+                double xmax=std::stod(rangeInfo[3]);
+                w->var(var.c_str()) -> setRange(name.c_str(),xmin,xmax);
+
+                // DEBUG
+                w->var(var.c_str()) -> Print("V");
+            }
+        }
+        if (w->obj("NamedRange") == NULL)
+        {
+            w->import(TString(setFitNamedRangeExpression_),"NamedRange");
+        }
+        else {
+            *((TString*)w->obj("NamedRange")) =  setFitNamedRangeExpression_;
+        }
+
+        // DEBUG
+        std::cout<<"NamedRange is"<<*(TString*)w->obj("NamedRange")<<std::endl;
     }
 
   } else {
