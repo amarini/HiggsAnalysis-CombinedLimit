@@ -5,6 +5,9 @@
 #include <RooCategory.h>
 #include <RooDataSet.h>
 #include <RooProduct.h>
+#include <thread>
+#include <numeric>
+#include <algorithm>
 
 #include "HiggsAnalysis/CombinedLimit/interface/ProfilingTools.h"
 #include <HiggsAnalysis/CombinedLimit/interface/RooMultiPdf.h>
@@ -22,6 +25,9 @@
 #include <HiggsAnalysis/CombinedLimit/interface/Accumulators.h>
 #include "HiggsAnalysis/CombinedLimit/interface/Logger.h"
 #include "vectorized.h"
+
+#define THREADED
+#define N_THREADS 2
 
 namespace cacheutils {
     typedef OptimizedCachingPdfT<FastVerticalInterpHistPdf,FastVerticalInterpHistPdfV> CachingHistPdf;
@@ -52,13 +58,13 @@ namespace cacheutils {
 }
 
 //---- Uncomment this to get a '.' printed every some evals
-//#define TRACE_NLL_EVALS
+#define TRACE_NLL_EVALS
 
 //---- Uncomment this to get a total of the evals done
-//#define TRACE_NLL_EVAL_COUNT
+#define TRACE_NLL_EVAL_COUNT
 
 //---- Uncomment this and run with --perfCounters to get cache statistics
-// #define DEBUG_CACHE
+#define DEBUG_CACHE
 
 //---- Uncomment to dump PDF values inside CachingAddNLL
 //#define LOG_ADDPDFS
@@ -998,7 +1004,33 @@ cacheutils::CachingSimNLL::evaluate() const
     PerfCounter::add("CachingSimNLL::evaluate called");
 #endif
     static bool gentleNegativePenalty_ = runtimedef::get("GENTLE_LEE");
-    DefaultAccumulator<double> ret = 0;
+    DefaultAccumulator<double> ret = 0; 
+    std::mutex ret_m; std::vector<std::thread> threads;
+
+    for (unsigned i =0 ;i< N_THREADS ;++i)
+    {
+    std::thread t([&ret,&ret_m](const std::vector<CachingAddNLL*>& pdfs_,const std::vector<RooAbsReal*>& channelMasks_, int i){
+        //unsigned idx = 0; 
+        DefaultAccumulator<double> r = 0; 
+        unsigned M=pdfs_.size();
+        unsigned idx=M/N_THREADS*i;
+        for (std::vector<CachingAddNLL*>::const_iterator it = pdfs_.begin()+idx, ed = pdfs_.end(); (it != ed) and (idx<M/N_THREADS*(i+1)); ++it, ++idx) {
+        if (*it != 0) {
+            if (channelMasks_.size() > 0 && channelMasks_[idx]->getVal() != 0.) {
+            continue;
+            }
+            double nllval = (*it)->getVal();
+            r+=nllval;
+        }
+        }
+        {
+            std::lock_guard<std::mutex> lock(ret_m); 
+            ret+=r;
+        }
+    }, pdfs_,channelMasks_,i);
+    threads.push_back(std::move(t));
+    
+    /*
     unsigned idx = 0;
     for (std::vector<CachingAddNLL*>::const_iterator it = pdfs_.begin(), ed = pdfs_.end(); it != ed; ++it, ++idx) {
         if (*it != 0) {
@@ -1008,34 +1040,89 @@ cacheutils::CachingSimNLL::evaluate() const
                 //     << channelMasks_[idx]->getVal() << "\n";
                 continue;
             }
+             //UN-THREADED
             double nllval = (*it)->getVal();
             // what sanity check could I put here?
             ret += nllval;
+            
+             // THREADED
+            //std::thread t([&ret,&ret_m](const CachingAddNLL*x){double nllval= x->getVal(); std::lock_guard<std::mutex> lock(ret_m); ret+=nllval;},*it);
+            //threads.push_back(std::move(t));
+            
         }
-    }
+    } // for
+    */
+    } // nthreads
+    //std::cout<<"joining:"<<pdfs_.size() << "|"<< threads.size()<<std::endl;
+    for( auto &t:threads)t.join(); 
+    threads.clear();
+    //std::cout<<"cleared:"<<ret.sum()<<std::endl;
+    
+
     if (!constrainPdfs_.empty() || !constrainPdfsFast_.empty()) {
+        //std::cout<<"costr size:"<<constrainPdfs_.size() <<std::endl;
         DefaultAccumulator<double> ret2 = 0;
+        std::mutex ret2_m; 
         /// ============= GENERIC CONSTRAINTS  =========
-        std::vector<double>::const_iterator itz = constrainZeroPoints_.begin();
-        for (std::vector<RooAbsPdf *>::const_iterator it = constrainPdfs_.begin(), ed = constrainPdfs_.end(); it != ed; ++it, ++itz) { 
-            double pdfval = (*it)->getVal(nuis_);
-            if (!isnormal(pdfval) || pdfval <= 0) {
-                std::cout << "WARNING: underflow constraint pdf " << (*it)->GetName() << ", value = " << pdfval << std::endl;
-    		Logger::instance().log(std::string(Form("CachingNLL.cc: %d -- underflow (pdf evaluates to <=0) of constraint pdf %s, value = %g ",__LINE__,(*it)->GetName(), pdfval)),Logger::kLogLevelInfo,__func__);
-                if (gentleNegativePenalty_) { ret += 25; continue; }
-                if (!noDeepLEE_) logEvalError((std::string("Constraint pdf ")+(*it)->GetName()+" evaluated to zero, negative or error").c_str());
-                pdfval = 1e-9;
-            }
-            ret2 += (log(pdfval) + *itz);
-        }
+        for (unsigned i =0 ;i< N_THREADS ;++i)
+        {
+            std::thread t( [&ret2,&ret2_m, &ret, &ret_m,this](const std::vector<RooAbsPdf *>& constrainPdfs_, const std::vector<double>& constrainZeroPoints_,int i){
+                    DefaultAccumulator<double> r = 0;
+                    unsigned M=constrainPdfs_.size();
+                    unsigned idx=M/N_THREADS*i;
+                    std::vector<double>::const_iterator itz = constrainZeroPoints_.begin();
+                    for (std::vector<RooAbsPdf *>::const_iterator it = constrainPdfs_.begin()+idx, ed = constrainPdfs_.end(); (it != ed) and (idx < M/N_THREADS*(i+1)) ;++it, ++itz,++idx) { 
+                        double pdfval = (*it)->getVal(nuis_);
+                        if (!isnormal(pdfval) || pdfval <= 0) {
+                            std::cout << "WARNING: underflow constraint pdf " << (*it)->GetName() << ", value = " << pdfval << std::endl;
+                            Logger::instance().log(std::string(Form("CachingNLL.cc: %d -- underflow (pdf evaluates to <=0) of constraint pdf %s, value = %g ",__LINE__,(*it)->GetName(), pdfval)),Logger::kLogLevelInfo,__func__);
+                            if (gentleNegativePenalty_) { std::lock_guard<std::mutex> lock(ret_m); ret += 25; continue; }
+                            if (!noDeepLEE_) logEvalError((std::string("Constraint pdf ")+(*it)->GetName()+" evaluated to zero, negative or error").c_str());
+                            pdfval = 1e-9;
+                        }
+                        
+                        r += (log(pdfval) + *itz);
+
+                    }
+                {
+                    std::lock_guard<std::mutex> lock(ret2_m); 
+                    ret2+=r;
+                }
+            }, constrainPdfs_,constrainZeroPoints_,i);// thread
+            threads.push_back(std::move(t));
+        }// nthreads
+
+        //for( auto &t:threads)t.join();
+        //threads.clear(); // can be done later in principle
+        //std::cout<<"cleared:"<<ret2.sum()<<std::endl;
+
         /// ============= FAST GAUSSIAN CONSTRAINTS  =========
-        itz = constrainZeroPointsFast_.begin();
-        for (std::vector<SimpleGaussianConstraint*>::const_iterator it = constrainPdfsFast_.begin(), ed = constrainPdfsFast_.end(); it != ed; ++it, ++itz) { 
-            double logpdfval = (*it)->getLogValFast();
-            //std::cout << "pdf " << (*it)->GetName() << " = " << logpdfval << std::endl;
-            ret2 += (logpdfval + *itz);
-        }
+        //std::cout<<"costr size fast:"<<constrainPdfsFast_.size() <<std::endl;
+        for (unsigned i =0 ;i< N_THREADS ;++i)
+        {
+            std::thread t( [&ret2,&ret2_m](const std::vector<SimpleGaussianConstraint*>& constrainPdfsFast_, const std::vector<double>& constrainZeroPointsFast_,int i) {
+                DefaultAccumulator<double> r = 0;
+                unsigned M=constrainPdfsFast_.size();
+                unsigned idx=M/N_THREADS*i;
+                std::vector<double>::const_iterator itz= constrainZeroPointsFast_.begin();
+                for (std::vector<SimpleGaussianConstraint*>::const_iterator it = constrainPdfsFast_.begin()+idx, ed = constrainPdfsFast_.end(); (it != ed) and (idx<M/N_THREADS*(i+1)); ++it, ++itz,++idx) { 
+                    double logpdfval = (*it)->getLogValFast();
+                    //std::cout << "pdf " << (*it)->GetName() << " = " << logpdfval << std::endl;
+                    r    += (logpdfval + *itz);
+                }
+                {
+                std::lock_guard<std::mutex> lock(ret2_m); 
+                ret2 += r;
+                }
+            }, constrainPdfsFast_,constrainZeroPointsFast_,i); // thread
+            threads.push_back(std::move(t));
+        }//nthreads
+
+        for( auto &t:threads)t.join();
+        threads.clear(); // can be done later in principle
+        //std::cout<<"cleared:"<<ret2.sum()<<std::endl;
         /// ============= FAST POISSON CONSTRAINTS  =========
+        std::vector<double>::const_iterator itz ; //to remove
         itz = constrainZeroPointsFastPoisson_.begin();
         for (std::vector<SimplePoissonConstraint*>::const_iterator it = constrainPdfsFastPoisson_.begin(), ed = constrainPdfsFastPoisson_.end(); it != ed; ++it, ++itz) { 
             double logpdfval = (*it)->getLogValFast();
