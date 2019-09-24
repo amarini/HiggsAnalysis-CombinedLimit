@@ -51,6 +51,7 @@ class STXStoEFTBaseModel(SMLikeHiggsModel):
     self.fixTHandBBH = fixTHandBBH #if false scaling function for tH, bbH MUST be defined in input txt file
     self.freezeOtherParameters = freezeOtherParameters #Option to freeze majority of parameters in model. Leaving those used in LHCHXSWG-INT-2017-001 fit to float
     self.fixProcesses = fixProcesses #Option to fix certain STXS bins: comma separated list of STXS bins
+    self.useLHCHXSWGNumbers=False
     if self.freezeOtherParameters: 
       self.parametersOfInterest = ['cG','cA','cWWMinuscB','cWWPluscB','cHW','cu','cd','cl'] # note cWW+cB is frozen, but required to define cWW and cB
       self.distinctParametersOfInterest = set([])
@@ -222,7 +223,7 @@ class STXStoEFTBaseModel(SMLikeHiggsModel):
     _sumIdx = -1 #start at -1
     _termIdx = 0    
     for _termIdx in range(len(formulaTerms)): 
-      if _termIdx % 25 == 0: _sumIdx += 1
+      if _termIdx % 15 == 0: _sumIdx += 1
       #Add terms to sum
       if( what in self.DecayScalingFunctions )&( what != "tot" ): sumString = "scaling_partial_%s_%s"%(what,_sumIdx)
       else: sumString = "scaling_%s_%s"%(what,_sumIdx)
