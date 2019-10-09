@@ -337,17 +337,17 @@ Double_t RooRealFlooredSumPdf::analyticalIntegralWN(Int_t code, const RooArgSet*
 	RooFIter funcIntIter = cache->_funcIntList.fwdIterator();
 	RooFIter coefIter = _coefList.fwdIterator();
 	RooFIter funcIter = _funcList.fwdIterator();
-	RooAbsReal *coef(0), *funcInt(0), *func(0);
+	RooAbsReal *coef(0), *funcInt(0);// *func(0);
 	Double_t value(0);
 
 	// N funcs, N-1 coefficients 
 	Double_t lastCoef(1);
 	while ((coef = (RooAbsReal*)coefIter.next())) {
 		funcInt = (RooAbsReal*)funcIntIter.next();
-		func = (RooAbsReal*)funcIter.next();
+		//func = (RooAbsReal*)funcIter.next();
 		Double_t coefVal = coef->getVal(normSet2);
 		if (coefVal) {
-			assert(func);
+			//assert(func);
 			assert(funcInt);
 			value += funcInt->getVal()*coefVal;
 			lastCoef -= coef->getVal(normSet2);

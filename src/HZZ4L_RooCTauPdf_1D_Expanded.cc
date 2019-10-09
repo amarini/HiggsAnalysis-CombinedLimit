@@ -8,6 +8,7 @@
 #include "TH3F.h"
 #include "TAxis.h"
 #include "RooDataHist.h"
+#include <stdexcept>
 
 using namespace TMath;
 using namespace RooFit;
@@ -321,6 +322,7 @@ Double_t HZZ4L_RooCTauPdf_1D_Expanded::analyticalIntegral(Int_t code, const char
 	default:
 		cerr << "getAnalyticalIntegral failed, so analytical integration did not complete!" << endl;
 		assert(0);
+        throw std::logic_error("analytical integral failed");
 	}
 }
 

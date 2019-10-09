@@ -1,10 +1,10 @@
- . /cvmfs/cms.cern.ch/slc7_amd64_gcc700/external/gcc/7.0.0-omkpbe2/etc/profile.d/init.sh 
- . /cvmfs/cms.cern.ch/slc7_amd64_gcc700/lcg/root/6.12.07-gnimlf5/bin/thisroot.sh
- . /cvmfs/cms.cern.ch/slc7_amd64_gcc700/external/gsl/2.2.1-omkpbe2/etc/profile.d/init.sh
- . /cvmfs/cms.cern.ch/slc7_amd64_gcc700/external/tbb/2018_U1-omkpbe2/etc/profile.d/init.sh
- . /cvmfs/cms.cern.ch/slc7_amd64_gcc700/cms/vdt/0.4.0-gnimlf/etc/profile.d/init.sh 
- . /cvmfs/cms.cern.ch/slc7_amd64_gcc700/external/boost/1.63.0-gnimlf/etc/profile.d/init.sh 
- . /cvmfs/cms.cern.ch/slc7_amd64_gcc700/external/pcre/8.37-omkpbe2/etc/profile.d/init.sh
+# using slc7 gcc820
+ source /cvmfs/cms.cern.ch/slc7_amd64_gcc820/external/gcc/8.2.0-pafccj/etc/profile.d/init.sh
+ source /cvmfs/cms.cern.ch/slc7_amd64_gcc820/external/gsl/2.2.1-pafccj/etc/profile.d/init.sh
+ source /cvmfs/cms.cern.ch/slc7_amd64_gcc820/external/boost/1.67.0-pafccj/etc/profile.d/init.sh
+ source /cvmfs/cms.cern.ch/slc7_amd64_gcc820/external/xz/5.2.2-pafccj/etc/profile.d/init.sh
+ source /cvmfs/cms.cern.ch/slc7_amd64_gcc820/external/tbb/2019_U3-pafccj/etc/profile.d/init.sh
+ source /afs/cern.ch/user/a/amarini/work/HiggsCombination/standalone/root-build/bin/thisroot.sh
  export PATH=${PATH}:${PWD}/exe:${PWD}/scripts
  export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${PWD}/lib
  export PYTHONPATH=${PYTHONPATH}:${PWD}/lib/python:${PWD}/lib

@@ -291,6 +291,7 @@ bool HybridNew::run(RooWorkspace *w, RooStats::ModelConfig *mc_s, RooStats::Mode
                                    return runTestStatistics(w, mc_s, mc_b, data, limit, limitErr, hint);
     }
     assert("Shouldn't get here" == 0);
+    throw std::runtime_error("should not be here");
 }
 
 bool HybridNew::runSignificance(RooWorkspace *w, RooStats::ModelConfig *mc_s, RooStats::ModelConfig *mc_b, RooAbsData &data, double &limit, double &limitErr, const double *hint) {

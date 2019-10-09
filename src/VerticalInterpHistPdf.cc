@@ -25,6 +25,8 @@
 #include "RooHistPdf.h"
 #include "RooDataHist.h"
 #include "HiggsAnalysis/CombinedLimit/interface/utils.h"
+#include <stdexcept>
+
 namespace {
     std::auto_ptr<TH1> safeCreateHist2D(RooAbsPdf *pdf, const RooRealVar &x, const RooRealVar &y, bool conditional) {
         if (!pdf->getAttribute("safeCreateHist2D:ok") && typeid(*pdf) == typeid(RooHistPdf)) {
@@ -1169,6 +1171,7 @@ Double_t FastVerticalInterpHistPdf2D2::maxVal(int code) const {
     coutE(InputArguments) << "FastVerticalInterpHistPdf2D2::maxVal(" << GetName() 
 			  << ") unsupported integration code " << code << "\n" << std::endl;
     assert(0);
+    throw std::logic_error("unsupported integration");
 
 }
 

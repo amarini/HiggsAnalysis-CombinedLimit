@@ -19,7 +19,7 @@
 #include "Math/Minimizer.h"
 #include "Math/Factory.h"
 
-#include "HiggsAnalysis/CombinedLimit/interface/ProfileLikelihood.h"
+#include "HiggsAnalysis/CombinedLimit/interface/Significance.h"
 #include "HiggsAnalysis/CombinedLimit/interface/RooSimultaneousOpt.h"
 #include "HiggsAnalysis/CombinedLimit/interface/SequentialMinimizer.h"
 #include "HiggsAnalysis/CombinedLimit/interface/ProfiledLikelihoodRatioTestStatExt.h"
@@ -30,7 +30,7 @@
 RooWorkspace *w;
 
 double runSeqMin(RooAbsReal *nll, RooRealVar *poi, bool improve) {
-    ProfileLikelihood::MinimizerSentry cfg("SeqMinimizer",ROOT::Math::MinimizerOptions::DefaultTolerance());
+    Significance::MinimizerSentry cfg("SeqMinimizer",ROOT::Math::MinimizerOptions::DefaultTolerance());
     std::cout << "Initial NLL is " << nll->getVal() << std::endl;
     RooMinimizer minim(*nll);
     bool ret = nllutils::robustMinimize(*nll, minim, 0);
@@ -66,7 +66,7 @@ double testProfile(Func f, RooAbsReal *nll, RooRealVar *poi, double &xmin, doubl
 
 
 void runExternal(const char *file, double mh, const char *algo, double tol, const char *wsp, const char *datan, const char *mcn) {
-    ProfileLikelihood::MinimizerSentry cfg(algo,tol);
+    Significance::MinimizerSentry cfg(algo,tol);
     TFile *f = TFile::Open(file); if (f == 0) return;
     w = (RooWorkspace *) f->Get(wsp); if (w == 0) return;
     if (w->var("MH")) w->var("MH")->setVal(mh);
