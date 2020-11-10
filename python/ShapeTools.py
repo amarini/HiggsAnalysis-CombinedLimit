@@ -382,8 +382,8 @@ class ShapeBuilder(ModelBuilder):
             #if oldname in names: newname=names[oldname]
             newname_long=hashlib.md5(oldname).hexdigest()
             for i in range(self.options.compactify, len(newname_long)):
-                newname=newname_long[:i]
-                if not newname.islower(): newname='z'+newname
+                newname='z'+newname_long[:i]
+                #if not newname.islower(): newname='z'+newname
                 if newname not in names or names[newname] == oldname:
                     break
                 newname=oldname ## if exit from here set old name
