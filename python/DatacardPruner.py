@@ -9,7 +9,7 @@ import string
 class DatacardPruner(object) :
     """
     Description:
-    
+
     This is a class to prune uncertainties of an existing set of datacards. In pruning decision is based on the relative shift
     of the nuisance parameter by the maximum likelihood fit. Nuisance parameters with a shift below a certaint threshold are
     added to a list of parameters to be pruned. The pruning step needs as inputs the directory that contains all datacards,
@@ -32,7 +32,7 @@ class DatacardPruner(object) :
         self.fit_results = fit_results
         ## metric to be used for the pruning decision. Expected values are 'b', 's+b', 'max'
         self.metric = metric
-        ## mass value of the Higgs boson, when considering the s+b hypothesis in the metric 
+        ## mass value of the Higgs boson, when considering the s+b hypothesis in the metric
         self.mass = mass
         ## threshold on the relative shift of the parameter, below which a parameters will be pruned
         self.threshold = threshold
@@ -40,15 +40,15 @@ class DatacardPruner(object) :
         self.blacklist = blacklist
         ## list of python style regex for nuisance parameters that should only be considered for pruning
         self.whitelist = whitelist
-        ## is true if the the nuisance parameters should be commented from the test datacards right after the pruning decision has been taken  
+        ## is true if the the nuisance parameters should be commented from the test datacards right after the pruning decision has been taken
         self.comment_nuisances = comment_nuisances
-        
+
     def combine_fit_results(self, FITRESULTS) :
         """
         uses: FITRESULTS (list of one or more files containing the pulls of the max-likelihood fit), self.metric
         Create a pseudo file of fit results form a list of fit results based on a subset of datacards. From multiply occuring
         uncertainties larger pulls will replace smaller pulls according to the corresponding metric. The combined pseudo file
-        will be written to the tmp directory. The return value will be the full path to the combined pseudo file. 
+        will be written to the tmp directory. The return value will be the full path to the combined pseudo file.
         """
         output = {}
         headline = ''
@@ -82,7 +82,7 @@ class DatacardPruner(object) :
                             value_new = float(pulls_new[1])
                         if self.metric == 'max' :
                             value_old = max(abs(float(pulls_old[0])), float(pulls_old[1]))
-                            value_new = max(abs(float(pulls_new[0])), float(pulls_new[1]))                        
+                            value_new = max(abs(float(pulls_new[0])), float(pulls_new[1]))
                         if value_new > value_old :
                             output[key] = line
             file.close()
@@ -110,7 +110,7 @@ class DatacardPruner(object) :
                 return u_value == s_value
             else :
                 return u_value == s_value or s_value == '*'
-        
+
         ## determine list of bin names, list of process names and list of input
         ## files which contain shapes
         bins = []
@@ -134,7 +134,7 @@ class DatacardPruner(object) :
                     if not words[2] == '*' :
                         bin_excepts.append(words[2])
                     if not words[1] == '*' :
-                        proc_excepts.append(words[1])                    
+                        proc_excepts.append(words[1])
                     ## ----------  proc      bin       path      shape     syst
                     shapes.append((words[1], words[2], words[3], words[4], words[5]))
         file.close()
@@ -202,7 +202,7 @@ class DatacardPruner(object) :
         uses: DATACARD (absolute path to the datacard), self.mass
         Determine full list of uncertainties as a dictionary mapping uncertainty name to the maximal relative uncertainty.
         Uncertainties of type shape and lnN are supported. Return value is a dictionary mapping the name of the
-        uncertainty to the maximal relative uncertainty.    
+        uncertainty to the maximal relative uncertainty.
         """
         ## add lnN uncertainties to dictionary
         uncerts = self.determine_lnNs(DATACARD)
@@ -214,7 +214,7 @@ class DatacardPruner(object) :
         """
         uses: NAME (name of an uncertainty), LIST (a list of regex of names of uncertainties)
         Return True if name does have a correspondence in the list of regular expressions of LIST and False else.
-        Make sure that LIST does not contain empty strings. 
+        Make sure that LIST does not contain empty strings.
         """
         inList = False
         for unc in LIST :
@@ -291,14 +291,14 @@ class DatacardPruner(object) :
     def list_to_file(self, LIST, FILE) :
         """
         uses: LIST (list of elements), FILE (path to an output file in txt format)
-        Write all elements in a LIST to FILE. There is no return value. 
+        Write all elements in a LIST to FILE. There is no return value.
         """
         file= open(FILE,'w')
         for element in LIST :
             file.write(element+'\n')
         file.close()
         return
-        
+
     def manipulate_datacard(self, DATACARD, MANIPULATION, EXCLUDE=None) :
         """
         uses: DATACARD (path to the input datacard), MANIPULATION (a manipulation string), EXCLUDE (list of nuicance
@@ -322,7 +322,7 @@ class DatacardPruner(object) :
                         if EXCLUDE != None:
                             if name in EXCLUDE :
                                 excl+=1
-                                line = '#'+line                    
+                                line = '#'+line
                         else :
                             excl+=1
                             line = '#'+line
