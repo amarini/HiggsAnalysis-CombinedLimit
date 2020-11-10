@@ -309,17 +309,6 @@ class ShapeBuilder(ModelBuilder):
                 names={}
                 hashes={}
                 self.Compactify(self.out.pdf('model_s'),names,hashes)
-                for s in ['nuisances','globalObservables']:
-                    old= ROOT.RooArgList(self.out.set(s))
-                    news = [] 
-                    for i in range(0,old.getSize()):
-                        x=old.at(i)
-                        y= hashes[x.GetName()] if x.GetName() in hashes else x.GetName()
-                        news.append(y)
-                    self.out.removeSet(s)
-                    self.doSet(s,','.join(news))
-                self.extraNuisances= [ hashes[x] if x in hashes else x for x in self.extraNuisances  ]
-                self.extraGlobalObservables= [ hashes[x] if x in hashes else x for x in self.extraGlobalObservables  ]
                 with open(self.options.out+'_names.json','w') as f:
                     json.dump(names,f)
                 with open(self.options.out+'_hashes.json','w') as f:
@@ -367,14 +356,22 @@ class ShapeBuilder(ModelBuilder):
         hashes: old -> new 
         '''
 
-        poinames=[]# check pois
+        keepnames=[]# check pois
         poiIter = self.out.set('POI').createIterator()
         poi = poiIter.Next()
         while poi:
-            poinames.append(poi.GetName())
+            keepnames.append(poi.GetName())
             poi = poiIter.Next()
 
-        poinames . append('CMS_channel')  ## protect also the channel name
+        keepnames . append('CMS_channel')  ## protect also the channel name
+        ## nuisances and global observables
+        for s in ['nuisances','globalObservables']:
+            old= ROOT.RooArgList(self.out.set(s))
+            for i in range(0,old.getSize()):
+                x=old.at(i)
+                keepnames.append( x.GetName())
+        for x in self.extraNuisances + self.extraGlobalObservables:
+            keepnames .append (x)
 
         servers=self.getServersRecursive(node)
 
@@ -387,7 +384,7 @@ class ShapeBuilder(ModelBuilder):
                 if newname not in names or names[newname] == oldname:
                     break
                 newname=oldname ## if exit from here set old name
-            if len(oldname) > self.options.compactify and oldname not in poinames:
+            if len(oldname) > self.options.compactify and oldname not in keepnames:
                 if self.options.verbose:
                     print ("->Compactify name "+ oldname+"->"+newname)
                 server.SetName(newname)
