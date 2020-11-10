@@ -370,7 +370,7 @@ class ShapeBuilder(ModelBuilder):
             for i in range(0,old.getSize()):
                 x=old.at(i)
                 keepnames.append( x.GetName())
-        for x in self.extraNuisances + self.extraGlobalObservables:
+        for x in self.extraNuisances + self.extraGlobalObservables + self.discrete_param_set:
             keepnames .append (x)
 
         servers=self.getServersRecursive(node)
