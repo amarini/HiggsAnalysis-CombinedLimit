@@ -4,6 +4,9 @@ import ROOT
 from collections import defaultdict
 from math import *
 
+# for Compactify
+import hashlib,json
+
 RooArgSet_add_original = ROOT.RooArgSet.add
 def RooArgSet_add_patched(self, obj, *args, **kwargs):
     if isinstance(obj, ROOT.RooAbsCollection):
@@ -302,6 +305,25 @@ class ShapeBuilder(ModelBuilder):
                 if arg == None: break;
                 if arg.InheritsFrom("RooRealVar") and arg.GetName() != "r":
                     arg.setConstant(True);
+        if self.options.compactify>0 : 
+                names={}
+                hashes={}
+                self.Compactify(self.out.pdf('model_s'),names,hashes)
+                for s in ['nuisances','globalObservables']:
+                    old= ROOT.RooArgList(self.out.set(s))
+                    news = [] 
+                    for i in range(0,old.getSize()):
+                        x=old.at(i)
+                        y= hashes[x.GetName()] if x.GetName() in hashes else x.GetName()
+                        news.append(y)
+                    self.out.removeSet(s)
+                    self.doSet(s,','.join(news))
+                self.extraNuisances= [ hashes[x] if x in hashes else x for x in self.extraNuisances  ]
+                self.extraGlobalObservables= [ hashes[x] if x in hashes else x for x in self.extraGlobalObservables  ]
+                with open(self.options.out+'_names.json','w') as f:
+                    json.dump(names,f)
+                with open(self.options.out+'_hashes.json','w') as f:
+                    json.dump(hashes,f)
 
     def RenameDupObjs(self, dupObjs, dupNames, newObj, postFix):
         #print 'Checking for duplicates in %s' % newObj.GetName()
@@ -317,6 +339,68 @@ class ShapeBuilder(ModelBuilder):
                 # print 'Objected %s is repeated' % arg.GetName()
             dupObjs.add(arg)
             dupNames.add(arg.GetName())
+    
+    def getServersRecursive(self,node,servers=[]):
+        iter = node.serverIterator()
+        while True:
+            server = iter.Next()
+            if server == None: break
+
+            if server not in servers:
+                servers.append(server)
+                self.getServersRecursive(server,servers)
+        return servers
+
+    def getClients(self,node):
+        iter=node.clientIterator()
+        clients=[]
+        while True:
+            client=iter.Next()
+            if client==None: break
+            clients.append(client)
+        return clients
+
+    def Compactify(self,node,names,hashes):
+        ''' 
+        Compactify the names of the objects included.
+        names: new ->old for collision checking
+        hashes: old -> new 
+        '''
+
+        poinames=[]# check pois
+        poiIter = self.out.set('POI').createIterator()
+        poi = poiIter.Next()
+        while poi:
+            poinames.append(poi.GetName())
+            poi = poiIter.Next()
+
+        poinames . append('CMS_channel')  ## protect also the channel name
+
+        servers=self.getServersRecursive(node)
+
+        for server in servers:
+            oldname=server.GetName()
+            #if oldname in names: newname=names[oldname]
+            newname_long=hashlib.md5(oldname).hexdigest()
+            for i in range(self.options.compactify, len(newname_long)):
+                newname=newname_long[:i]
+                if newname not in names or names[newname] == oldname:
+                    break
+                newname=oldname ## if exit from here set old name
+            if len(oldname) > self.options.compactify and oldname not in poinames:
+                if self.options.verbose:
+                    print ("->Compactify name "+ oldname+"->"+newname)
+                server.SetName(newname)
+                server.SetTitle(newname)
+                names[newname] = oldname
+                hashes[oldname] = newname
+                if isinstance(server,ROOT.RooRealVar):
+                    for ds in self.getClients(server):
+                        if not isinstance(ds, ROOT.RooAbsData):continue
+                        ds.changeObservableName(oldname,newname)
+            #self.Compactify(server,names,hashes)
+        
+
     ## --------------------------------------
     ## -------- High level helpers ----------
     ## --------------------------------------
