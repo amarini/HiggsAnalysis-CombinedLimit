@@ -329,15 +329,17 @@ class ShapeBuilder(ModelBuilder):
             dupObjs.add(arg)
             dupNames.add(arg.GetName())
     
-    def getServersRecursive(self,node,servers=[]):
+    def getServersRecursive(self,node):
         iter = node.serverIterator()
+        
+        servers=[]
         while True:
             server = iter.Next()
             if server == None: break
 
-            if server not in servers:
-                servers.append(server)
-                self.getServersRecursive(server,servers)
+            servers.append(server)
+            servers += self.getServersRecursive(server)
+            servers = list(set(servers))
         return servers
 
     def getClients(self,node):
