@@ -337,7 +337,11 @@ class ShapeBuilder(ModelBuilder):
             server = iter.Next()
             if server == None: break
 
-            servers.append(server)
+            if isinstance(node, ROOT.RooSimultaneous) or isinstance(node, ROOT.RooSimultaneousOpt):
+                '''Problem with hgg and factorized pdf in combine?'''
+            else:
+                servers.append(server)
+
             servers += self.getServersRecursive(server)
             servers = list(set(servers))
         return servers
@@ -399,7 +403,14 @@ class ShapeBuilder(ModelBuilder):
                         if not isinstance(ds, ROOT.RooAbsData):continue
                         ds.changeObservableName(oldname,newname)
             #self.Compactify(server,names,hashes)
-        
+        return
+ 
+#sim->indexCat().Clone();
+#TObjArray factorizedPdfs(nbins); RooArgSet newOwned;
+#        for (int ic = 0, nc = nbins; ic < nc; ++ic) {
+#            cat->setBin(ic);
+#            RooAbsPdf *pdfi = sim->getPdf(cat->getLabel());
+
 
     ## --------------------------------------
     ## -------- High level helpers ----------
