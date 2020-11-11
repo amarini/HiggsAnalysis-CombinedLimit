@@ -333,14 +333,18 @@ class ShapeBuilder(ModelBuilder):
         iter = node.serverIterator()
         
         servers=[]
+
+        if isinstance(node,ROOT.RooMultiPdf):
+            '''Problem with hgg and factorized pdf in combine?'''
+            return servers
+
         while True:
             server = iter.Next()
             if server == None: break
 
-            if isinstance(node, ROOT.RooSimultaneous) or isinstance(node, ROOT.RooSimultaneousOpt):
-                '''Problem with hgg and factorized pdf in combine?'''
-            else:
-                servers.append(server)
+            #if isinstance(node, ROOT.RooSimultaneous) or isinstance(node, ROOT.RooSimultaneousOpt):
+            #    '''Problem with hgg and factorized pdf in combine?'''
+            servers.append(server)
 
             servers += self.getServersRecursive(server)
             servers = list(set(servers))
