@@ -901,6 +901,7 @@ cacheutils::CachingSimNLL::setup_()
     static bool verb  = runtimedef::get("ADDNLL_VERBOSE_CACHING");
 
     RooArgList constraints;
+    factorizedPdf_.reset();
     factorizedPdf_.reset(dynamic_cast<RooSimultaneous *>(utils::factorizePdf(*dataOriginal_->get(), *pdfclone, constraints)));
 
     RooSimultaneous *simpdf = factorizedPdf_.get();
