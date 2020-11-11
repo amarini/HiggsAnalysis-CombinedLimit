@@ -334,10 +334,6 @@ class ShapeBuilder(ModelBuilder):
         
         servers=[]
 
-        if isinstance(node,ROOT.RooMultiPdf):
-            '''Problem with hgg and factorized pdf in combine?'''
-            return servers
-
         while True:
             server = iter.Next()
             if server == None: break
@@ -380,8 +376,17 @@ class ShapeBuilder(ModelBuilder):
             for i in range(0,old.getSize()):
                 x=old.at(i)
                 keepnames.append( x.GetName())
+
+        old= ROOT.RooArgList(self.out.binVars)
+        for i in range(0,old.getSize()):
+            x=old.at(i)
+            keepnames.append( x.GetName())
         for x in self.extraNuisances + self.extraGlobalObservables + self.discrete_param_set:
             keepnames .append (x)
+
+
+        if self.options.verbose: 
+            print "Protecting from compactification:",','.join(keepnames)
 
         servers=self.getServersRecursive(node)
 
