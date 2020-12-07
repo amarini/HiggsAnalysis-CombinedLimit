@@ -1,7 +1,10 @@
+from __future__ import absolute_import
+from __future__ import print_function
 from HiggsAnalysis.CombinedLimit.PhysicsModel import *
 from HiggsAnalysis.CombinedLimit.SMHiggsBuilder import SMHiggsBuilder
 from HiggsAnalysis.CombinedLimit.LHCHCGModels import LHCHCGBaseModel
 import ROOT, os
+from six.moves import range
 
 ## Naming conventions
 CMS_to_LHCHCG_Dec = { 
@@ -50,7 +53,7 @@ class TrilinearHiggsKappaVKappaF(LHCHCGBaseModel):
         for po in physOptions:
             if po.startswith("BRU="):
                 self.doBRU = (po.replace("BRU=","") in [ "yes", "1", "Yes", "True", "true" ])
-        print "BR uncertainties in partial widths: %s " % self.doBRU
+        print("BR uncertainties in partial widths: %s " % self.doBRU)
     def doParametersOfInterest(self):
         """Create POI out of signal strength and MH"""
         self.modelBuilder.doVar("kappa_V[1,0.0,2.0]")
@@ -161,15 +164,15 @@ class TrilinearHiggsKappaVKappaF(LHCHCGBaseModel):
 	       				%(production,energy,C1_map[production],EWK,dZH))
 	       XSscal = ("@0", "kVkFkl_XSscal_%s_%s, " % (production,energy) )
             elif production == "bbH": XSscal = ("@0*@0", "kappa_F")
-            else: raise RuntimeError, "Production %s not supported" % production
+            else: raise RuntimeError("Production %s not supported" % production)
             
 	    BRscal = decay
             if decay == "hss": BRscal = "hbb"
             if not self.modelBuilder.out.function("kVkFkl_BRscal_"+BRscal):
-                raise RuntimeError, "Decay mode %s not supported" % decay
+                raise RuntimeError("Decay mode %s not supported" % decay)
             
 	    self.modelBuilder.factory_('expr::%s("%s*@1", %s, kVkFkl_BRscal_%s)' % (name, XSscal[0], XSscal[1], BRscal))
-            print '[LHC-HCG Kappas]', name, production, decay, energy,": ",
+            print('[LHC-HCG Kappas]', name, production, decay, energy,": ", end=' ')
             self.modelBuilder.out.function(name).Print("")
         return name
 
@@ -183,31 +186,31 @@ def getGenProdDecMode(bin,process,options):
     decaySource   = options.fileName+":"+bin # by default, decay comes from the datacard name or bin label
     if "_" in process: 
 	if "gen" in process: (processSource, decaySource) = process.split("_")[0]+"_"+process.split("_")[1],process.split("_")[-1]
-	else: raise RuntimeError, "Error - must specify a generator bin to match C1 amplitude" 
+	else: raise RuntimeError("Error - must specify a generator bin to match C1 amplitude") 
 	if decaySource not in ALL_HIGGS_DECAYS:
-	    print "ERROR", "Validation Error: signal process %s has a postfix %s which is not one recognized higgs decay modes (%s)" % (process,decaySource,ALL_HIGGS_DECAYS)
+	    print("ERROR", "Validation Error: signal process %s has a postfix %s which is not one recognized higgs decay modes (%s)" % (process,decaySource,ALL_HIGGS_DECAYS))
 	    #raise RuntimeError, "Validation Error: signal process %s has a postfix %s which is not one recognized higgs decay modes (%s)" % (process,decaySource,ALL_HIGGS_DECAYS)
     if "gen" in processSource:
-      if processSource.split("_")[0] not in ALL_HIGGS_PROD: raise RuntimeError, "Validation Error: signal process %s not among the allowed ones." % processSource.split("_")[0]
+      if processSource.split("_")[0] not in ALL_HIGGS_PROD: raise RuntimeError("Validation Error: signal process %s not among the allowed ones." % processSource.split("_")[0])
     else:
-      if processSource not in ALL_HIGGS_PROD: raise RuntimeError, "Validation Error: signal process %s not among the allowed ones." % processSource
+      if processSource not in ALL_HIGGS_PROD: raise RuntimeError("Validation Error: signal process %s not among the allowed ones." % processSource)
     #
     foundDecay = None
     for D in ALL_HIGGS_DECAYS:
 	if D in decaySource:
-	    if foundDecay: raise RuntimeError, "Validation Error: decay string %s contains multiple known decay names" % decaySource
+	    if foundDecay: raise RuntimeError("Validation Error: decay string %s contains multiple known decay names" % decaySource)
 	    foundDecay = D
-    if not foundDecay: raise RuntimeError, "Validation Error: decay string %s does not contain any known decay name" % decaySource
+    if not foundDecay: raise RuntimeError("Validation Error: decay string %s does not contain any known decay name" % decaySource)
     #
     foundEnergy = None
     for D in [ '7TeV', '8TeV', '13TeV', '14TeV' ]:
 	if D in decaySource:
-	    if foundEnergy: raise RuntimeError, "Validation Error: decay string %s contains multiple known energies" % decaySource
+	    if foundEnergy: raise RuntimeError("Validation Error: decay string %s contains multiple known energies" % decaySource)
 	    foundEnergy = D
     if not foundEnergy:
 	for D in [ '7TeV', '8TeV', '13TeV', '14TeV' ]:
 	    if D in options.fileName+":"+bin:
-		if foundEnergy: raise RuntimeError, "Validation Error: decay string %s contains multiple known energies" % decaySource
+		if foundEnergy: raise RuntimeError("Validation Error: decay string %s contains multiple known energies" % decaySource)
 		foundEnergy = D
     if not foundEnergy:
 	foundEnergy = '14TeV' ## if using 81x, chances are its 14 TeV
@@ -226,9 +229,9 @@ class TrilinearHiggsDifferential(PhysicsModel):
             if po.startswith("higgsMassRange="):
                 self.mHRange = po.replace("higgsMassRange=","").split(",")
                 if len(self.mHRange) != 2:
-                    raise RuntimeError, "Higgs mass range definition requires two extrema"
+                    raise RuntimeError("Higgs mass range definition requires two extrema")
                 elif float(self.mHRange[0]) >= float(self.mHRange[1]):
-                    raise RuntimeError, "Extrema for Higgs mass range defined with inverterd order. Second must be larger the first"
+                    raise RuntimeError("Extrema for Higgs mass range defined with inverterd order. Second must be larger the first")
     def doParametersOfInterest(self):
         """Create POI and other parameters, and define the POI set."""
 	
@@ -278,26 +281,26 @@ class TrilinearHiggsDifferential(PhysicsModel):
             self.modelBuilder.factory_("expr::BRscal_%s(\"1+((@0-1)*(%g-%g)/(1+(@0-1)*%g))\",k_lambda)" % (dec,valC1,cGTot,cGTot))
             for proc in C1_map:
              self.modelBuilder.factory_("expr::XSBRscal_%s(\"@0*@1\",XSscal_%s,BRscal_%s)"%(proc+"_"+dec,proc,dec))
-	     print "Made - " , "XSBRscal_%s"%(proc+"_"+dec)
+	     print("Made - " , "XSBRscal_%s"%(proc+"_"+dec))
 	    
 
     def getYieldScale(self,bin,process):
         "Split in production and decay, and call getHiggsSignalYieldScale; return 1 for backgrounds "
         if not self.DC.isSignal[process]: return 1
         (processSource, foundDecay, foundEnergy) = getGenProdDecMode(bin,process,self.options)
-        if foundDecay!="hgg": raise RuntimeError, "Only decay H->gamma gamma supported right now in differential model"
+        if foundDecay!="hgg": raise RuntimeError("Only decay H->gamma gamma supported right now in differential model")
 
-	print "Will scale ", bin, process, " by ", self.getHiggsSignalYieldScale(processSource, foundDecay, foundEnergy) 
+	print("Will scale ", bin, process, " by ", self.getHiggsSignalYieldScale(processSource, foundDecay, foundEnergy)) 
         return self.getHiggsSignalYieldScale(processSource, foundDecay, foundEnergy)
  
 
     def getHiggsSignalYieldScale(self,production,decay,energy):
         
         name = "XSBRscal_%s_%s" % (production,decay)
-        print name  
+        print(name)  
         #If name has been defined in doParameterOfInterest()
         if self.modelBuilder.out.function(name) == None:
-          print 'DEBUG: proc x genbin signal has not been given a scale factor'
+          print('DEBUG: proc x genbin signal has not been given a scale factor')
           #return 0
         #else: 
         #  print '[LHC-CMS Trilinear]', name, ": ", self.modelBuilder.out.function(name).Print("")
