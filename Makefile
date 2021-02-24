@@ -22,13 +22,13 @@
 #######################################################################
 
 # Boost
-BOOST = /cvmfs/cms.cern.ch/slc7_amd64_gcc820/external/boost/1.72.0-gchjei
-VDT   = /cvmfs/cms.cern.ch/slc7_amd64_gcc820/cms/vdt/0.4.0-ghbfee
+BOOST = /cvmfs/cms.cern.ch/cc8_amd64_gcc8/external/boost/1.72.0-gchjei
+VDT   = /cvmfs/cms.cern.ch/cc8_amd64_gcc8/cms/vdt/0.4.0-ghbfee
+GSL   = /cvmfs/cms.cern.ch/cc8_amd64_gcc8/external/gsl/2.6-bcolbf2
 # PCRE = /cvmfs/cms.cern.ch/slc7_amd64_gcc700/external/pcre/8.37-omkpbe2
-GSL = /cvmfs/cms.cern.ch/slc7_amd64_gcc820/external/gsl/2.6-bcolbf3
 # LIBXML = /cvmfs/cms.cern.ch/slc7_amd64_gcc700/external/libxml2/2.9.1-omkpbe2/include/libxml2
 # XZ = /cvmfs/cms.cern.ch/slc7_amd64_gcc700/external/xz/5.2.2-omkpbe2
-# ZLIB = /cvmfs/cms.cern.ch/slc7_amd64_gcc700/external/zlib-x86_64/1.2.11-omkpbe2
+#ZLIB = /cvmfs/cms.cern.ch/cc8_amd64_gcc8/external/zlib/1.2.11-bcolbf2 
 # Compiler and flags -----------------------------------------------------------
 CC = c++
 ROOTCFLAGS = $(shell root-config --cflags)
@@ -39,7 +39,7 @@ ROOTINC = $(shell root-config --incdir)
 CCFLAGS = -D STANDALONE $(ROOTCFLAGS) -I$(BOOST)/include -I$(VDT)/include -I$(GSL)/include -g -fPIC
 # CMSSW CXXFLAGS plus -Wno-unused-local-typedefs (otherwise we get a flood of messages from BOOST) plus -Wno-unused-function
 CCFLAGS += -O2 -pthread -pipe -Werror=main -Werror=pointer-arith -Werror=overlength-strings -Wno-vla -Werror=overflow -std=c++1z -ftree-vectorize -Wstrict-overflow -Werror=array-bounds -Werror=format-contains-nul -Werror=type-limits -fvisibility-inlines-hidden -fno-math-errno --param vect-max-version-for-alias-checks=50 -Xassembler --compress-debug-sections -msse3 -felide-constructors -fmessage-length=0 -Wall -Wno-non-template-friend -Wno-long-long -Wreturn-type -Wunused -Wparentheses -Wno-deprecated -Werror=return-type -Werror=missing-braces -Werror=unused-value -Werror=address -Werror=format -Werror=sign-compare -Werror=write-strings -Werror=delete-non-virtual-dtor -Werror=strict-aliasing -Werror=narrowing -Werror=unused-but-set-variable -Werror=reorder -Werror=unused-variable -Werror=conversion-null -Werror=return-local-addr -Wnon-virtual-dtor -Werror=switch -fdiagnostics-show-option -Wno-unused-local-typedefs -Wno-attributes -Wno-psabi -Wno-error=unused-variable -DBOOST_DISABLE_ASSERTS -DGNU_GCC -D_GNU_SOURCE -DBOOST_SPIRIT_THREADSAFE -DPHOENIX_THREADSAFE
-LIBS = $(ROOTLIBS) -L$(BOOST)/lib -L$(VDT)/lib -L$(GSL)/lib -lgsl -l RooFit -lRooFitCore -l RooStats -l Minuit -lMathMore -l Foam -lHistFactory -lboost_filesystem -lboost_program_options -lboost_system -lvdt
+LIBS = $(ROOTLIBS) -L$(BOOST)/lib -L$(VDT)/lib -L$(GSL)/lib -lgsl -l RooFit -lRooFitCore -l RooStats -l Minuit -lMathMore -l Foam -lHistFactory -lboost_filesystem -lboost_program_options -lboost_system -lvdt -lz
 
 # Library name -----------------------------------------------------------------
 LIBNAME=HiggsAnalysisCombinedLimit
