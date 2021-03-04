@@ -12,9 +12,11 @@
 #include "RooArgList.h"
 #include "RooRealProxy.h"
 #include "RooListProxy.h"
+#include "RooRealVarSharedProperties.h"
 
 using namespace std;
 using namespace RooFit;
+
 
 namespace {
   class RooRealVarSharedPropertiesSmart : public RooRealVarSharedProperties {
@@ -24,10 +26,12 @@ namespace {
   };
   class RooRealVarSmart : public RooRealVar {
     public:
-      void setHashTableSize(int size) { ((RooRealVarSharedPropertiesSmart*)sharedProp())->setHashTableSize(size); }
-      int getHashTableSize() const { return ((RooRealVarSharedPropertiesSmart*)sharedProp())->getHashTableSize(); }
+        //std::shared_ptr< RooRealVarSharedProperties >     
+      void setHashTableSize(int size) { ((RooRealVarSharedPropertiesSmart*)(sharedProp().get()))->setHashTableSize(size); }
+      int getHashTableSize() const { return ((RooRealVarSharedPropertiesSmart*)(sharedProp().get()))->getHashTableSize(); }
   };
 }
+
 
 ClassImp(RooParametricShapeBinPdf)
 //---------------------------------------------------------------------------
