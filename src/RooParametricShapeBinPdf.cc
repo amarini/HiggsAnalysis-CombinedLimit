@@ -18,19 +18,6 @@
 using namespace std;
 using namespace RooFit;
 
-namespace {
-  class RooRealVarSharedPropertiesSmart : public RooRealVarSharedProperties {
-    public:
-      void setHashTableSize(int size) { _altBinning.setHashTableSize(size); }
-      int getHashTableSize() const { return _altBinning.getHashTableSize(); }
-  };
-  class RooRealVarSmart : public RooRealVar {
-    public:
-      void setHashTableSize(int size) { ((RooRealVarSharedPropertiesSmart*)sharedProp().get())->setHashTableSize(size); }
-      int getHashTableSize() const { return ((RooRealVarSharedPropertiesSmart*)sharedProp().get())->getHashTableSize(); }
-  };
-}
-
 ClassImp(RooParametricShapeBinPdf)
 //---------------------------------------------------------------------------
 
@@ -55,8 +42,6 @@ RooParametricShapeBinPdf::RooParametricShapeBinPdf(const char *name, const char 
 
   //modify x to use hash table for range lookup
   RooRealVar x_rrv = dynamic_cast<const RooRealVar &>(x.arg());
-  RooRealVarSmart* x_smart(static_cast<RooRealVarSmart*>(&x_rrv));
-  x_smart->setHashTableSize(1);
 
   RooListProxy obs;
   obs.add(x.arg());
@@ -144,10 +129,6 @@ Double_t RooParametricShapeBinPdf::evaluate() const
   std::string rangeName  = Form("%s_%s_range_bin%d", GetName(), x.GetName(), iBin);
   if (!x.arg().hasRange(rangeName.c_str())) {
     RooRealVar x_rrv = dynamic_cast<const RooRealVar &>(x.arg());
-
-    //modify x to use hash table for range lookup
-    RooRealVarSmart* x_smart(static_cast<RooRealVarSmart*>(&x_rrv));
-    if(x_smart->getHashTableSize()==0) x_smart->setHashTableSize(1);
 
     Double_t xLow = xArray[iBin];
     Double_t xHigh = xArray[iBin+1];
