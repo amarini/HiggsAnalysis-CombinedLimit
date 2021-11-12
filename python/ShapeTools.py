@@ -532,6 +532,11 @@ class ShapeBuilder(ModelBuilder):
                     ret=ret.getCurrentPdf().Clone(ret.GetName())
                 if self.options.optimizeMHDependency and ret.InheritsFrom("RooAbsReal"):
                     ret = self.optimizeMHDependency(ret,self.wsp)
+                if self.wsp.expensiveObjectCache() and self.wsp.expensiveObjectCache().size()>0:
+                    print "DEBUG","expensiveObjectCache", "size=",self.wsp.expensiveObjectCache().size()
+                    print "wsp",self.wsp.GetName(),"importing",oname
+                    print "Getting rid of expensiveCache for saveWorkspace :("
+                    self.wsp.expensiveObjectCache().clearAll()
                 _cache[(channel,process,syst)] = ret
                 if not syst:
                   normname = "%s_norm" % (oname)
