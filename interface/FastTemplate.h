@@ -45,9 +45,11 @@ public:
     auto match = std::upper_bound(bbegin, bend, x);
     return match - bbegin - 1;
   }
-  U GetBinWidth(const unsigned int bin) const{
+  U GetBinWidth(const int bin) const{
     if (size()==0) return U(0);
-    else if (bin>=0 && bin<size()-1) return (binEdges_[bin+1]-binEdges_[bin]);
+    else if (bin>=0 && static_cast<unsigned int>(bin) < size()-1) {
+        return (binEdges_[bin+1]-binEdges_[bin]);
+    }
     else return U(1);
   }
   U GetBinLowEdge(const int bin=-1) const {
