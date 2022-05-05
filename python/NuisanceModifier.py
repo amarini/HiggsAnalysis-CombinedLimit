@@ -160,7 +160,7 @@ def doRenameNuisance(datacard,args):
             if pdf0 in vetoTypes:
                 raise RuntimeError("Error: Can only use nuisance edit rename with param, shape(N) or lnN type nuisances currently - you should rename the parameter in your input workspace/datacard.")
             if newname in list(datacard.systIDMap.keys()):
-                if not checkRenameSafety(id,datacard,newname): raise RuntimeError("Error: Cannot rename %s to %s, which exists and is incompatible"(oldname,newname))
+                if not checkRenameSafety(id,datacard,newname): raise RuntimeError("Error: Cannot rename %s to %s, which exists and is incompatible"%(oldname,newname))
 
             if isGlobal: # easy case
                 #print " global command, ", " looking at "
