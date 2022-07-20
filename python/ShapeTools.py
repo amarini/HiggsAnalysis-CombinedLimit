@@ -974,7 +974,7 @@ class ShapeBuilder(ModelBuilder):
             srviter = arg.serverMIterator()
             servers = []
             while True:
-                a = next(srviter)
+                a = srviter.next()
                 if not a: break
                 servers.append(a)
             #print "%sFound %d servers: %s" % (indent, len(servers), ", ".join(a.GetName() for a in servers))
