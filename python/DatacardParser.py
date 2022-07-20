@@ -103,7 +103,8 @@ def parseCard(file, options):
 
     try:
         for lineNumber,l in enumerate(file):
-            f = l.split();
+            if isinstance(l,bytes): l = str(l.decode())
+            f = l.split()
             if len(f) < 1: continue
             if f[0] == "imax":
                 nbins = int(f[1]) if f[1] != "*" else -1
@@ -178,6 +179,7 @@ def parseCard(file, options):
                 break # rate is the last line before nuisances
         # parse nuisances
         for lineNumber2,l in enumerate(file):
+            if isinstance(l,bytes): l = str(l.decode())
             if l.startswith("--"): continue
             l  = re.sub("\\s*#.*","",l)
             l = re.sub("(?<=\\s)-+(\\s|$)"," 0\\1",l);
