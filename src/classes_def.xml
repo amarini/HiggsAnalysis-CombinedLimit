@@ -228,4 +228,6 @@
   <class name="RooPowerLawPdf" />
   <class name="RooSumTwoPowerLawPdf" />
   <class name="RooEFTScalingFunction" />
+  <class name="RooMinimizerSemiAnalytic" />
+  <class name="RooMinimizerFcnSemiAnalytic" />
 </lcgdict>
