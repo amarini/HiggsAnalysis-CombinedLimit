@@ -85,7 +85,12 @@ void CascadeMinimizer::remakeMinimizer() {
     }
     else{
         isSemiAnalyticMinimizer=false;
-        minimizer_.reset(new RooMinimizer(nll_));
+        auto fcnmode = RooMinimizer::FcnMode::classic;
+        if (runtimedef::get("MINIMIZER_FCNGRADIENT") ) {
+            std::cout<<"FCN_GRADIENT in remaking minimizer"<<std::endl;
+            fcnmode = RooMinimizer::FcnMode::gradient;
+        }
+        minimizer_.reset(new RooMinimizer(nll_, fcnmode )); // FcnMode::gradient FcnMode::gradient_wrapper
     }
 
     if (simnll) simnll->setHideRooCategories(false);

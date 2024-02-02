@@ -939,4 +939,9 @@ RooFitResult* RooMinimizerSemiAnalytic::lastMinuitFit(const RooArgList& varList)
 
 }
 
+Int_t RooMinimizerSemiAnalytic::getPrintLevel() const
+{
+   return _printLevel;
+}
+
 #endif

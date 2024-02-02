@@ -56,6 +56,8 @@ public:
   void setMaxIterations(Int_t n) ;
   void setMaxFunctionCalls(Int_t n) ; 
 
+  Int_t getPrintLevel() const;
+
   RooFitResult* fit(const char* options) ;
 
   Int_t migrad() ;
