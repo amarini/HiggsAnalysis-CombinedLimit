@@ -287,7 +287,7 @@ class StageZeroRatio(STXSBaseModel):
 class StageZeroRunningmb(STXSBaseModel):
     "Allow different signal strength fits for the stage-0 model, for measuring running b quark mass"
 
-    def __init__(self, denominator="ZZ", profileBR=False, parametrizeXS=False):
+    def __init__(self, denominator="ZZ", profileBR=False, analytic=False):
         STXSBaseModel.__init__(self)  # not using 'super(x,self).__init__' since I don't understand it
         self.denominator = denominator
         self.POIs = ""
@@ -296,10 +296,10 @@ class StageZeroRunningmb(STXSBaseModel):
         datadir = os.environ["CMSSW_BASE"] + "/src/HiggsAnalysis/CombinedLimit/data/lhc-hxswg"
         self.mbparam =os.path.join(datadir,"sm/mbparam.txt")
         self.profileBR=profileBR
-        self.parametrizeXS = parametrizeXS
+        self.analytic = analytic ### analytic parametrization
 
-        if self.profileBR and self.parametrizeXS:
-            raise ValueError("parametrizeXS => not profiling BR")
+        if not self.profileBR and self.analytic:
+            raise ValueError("analytic => profileBR")
 
     def doVar(self, x, constant=True):
         self.modelBuilder.doVar(x)
@@ -399,7 +399,7 @@ class StageZeroRunningmb(STXSBaseModel):
             self.makeWidth("tot")
 
         for d in SM_HIGG_DECAYS + ["hss"]:
-            if not self.profileBR or d == 'hbb':
+            if not self.profileBR or (d == 'hbb' and not self.analytic):
                 self.makeWidth(d)
             if self.profileBR:
                 self.SMH.makeBR(d) ## do I need the BR ?
@@ -428,28 +428,22 @@ class StageZeroRunningmb(STXSBaseModel):
                         self.modelBuilder.factory_("expr::scaling_" + P + "_" + D + '_13TeV("@0",'+muXSBR+',)')
                     elif D =="bb":
                         muXSBR = "mu_XS_%s_x_BR_%s" % (P, self.denominator)
-                        #self.modelBuilder.factory_("expr::scaling_" + P + "_" + D + '_13TeV("@0*(1-0.07086*@1/2.787-1 + 1.144*(pow((@1/2.787),2)-1) -0.1361*(pow((@1/2.787),3)-1) + 0.06038*(pow((@1/2.787),4)-1) - 0.01167*(pow((@1/2.787),5)-1))",' + muXSBR + "," + "mb" + ")")
-                        self.modelBuilder.factory_("expr::scaling_"+ P + "_" + D + '_13TeV("@0*@1",gamma_'+dec+'_o_hzz_SM, '+muXSBR+')')
+                        if self.analytic:
+                            self.modelBuilder.factory_("expr::scaling_" + P + "_" + D + '_13TeV("@0*(1-0.07086*(@1/2.787-1) + 1.144*(pow((@1/2.787),2)-1) -0.1361*(pow((@1/2.787),3)-1) + 0.06038*(pow((@1/2.787),4)-1) - 0.01167*(pow((@1/2.787),5)-1))",' + muXSBR + "," + "mb" + ")")
+                        else:
+                            self.modelBuilder.factory_("expr::scaling_"+ P + "_" + D + '_13TeV("@0*@1",gamma_'+dec+'_o_hzz_SM, '+muXSBR+')')
                     else:
                         muXSBR = "mu_XS_%s_x_BR_%s" % (P, self.denominator)
                         muBR = "mu_BR_%s_r_BR_%s" % (D, self.denominator)
                         self.modelBuilder.factory_("expr::scaling_" + P + "_" + D + '_13TeV("@0*@1",' + muXSBR + "," + muBR + ")")
 
-                elif not self.parametrizeXS: ## not self.profileBR
+                else: ## not self.profileBR
                     if D == self.denominator:
                         ## GammaZ o GammaTot . Gamma_tot is actually Gamma_tot_o_Gamma_ZZ in the splines
                         self.modelBuilder.factory_("expr::scaling_" + P + "_" + D + '_13TeV("@0/@1",mu_XS_'+P+',gamma_tot_o_hzz_SM)')
                     else: #D =="bb":
                         ## gamma_hbb_o_hzz_SM * Gamma_ZZ / Gamma_tot
                         self.modelBuilder.factory_("expr::scaling_"+ P + "_" + D + '_13TeV("@0*@2/@1",gamma_'+dec+'_o_hzz_SM,gamma_tot_o_hzz_SM,mu_XS_'+P+')')
-                else:  ## NOT profileBR and parametrizeXS
-                    raise ValueError("NOT IMPLEMENTED")
-                    if D == self.denominator:
-                        #self.SMH.makeScaling(P,Cb='',Ctop='1',CW='',CZ='',Ctau='',Cc='')
-                        ## I can use th ggH parametrization
-                        pass
-                    else: #D="bb"
-                        pass
 
 
     def getHiggsSignalYieldScale(self, production, decay, energy):
@@ -799,5 +793,6 @@ stage0 = StageZero()
 stage0RatioZZ = StageZeroRatio("ZZ")
 stage0mbb = StageZeroRunningmb("ZZ")
 stage0mbbv2 = StageZeroRunningmb("ZZ",profileBR=True)
+stage0mbbv3 = StageZeroRunningmb("ZZ",profileBR=True,analytic=True)
 stage12 = StageOnePTwo()
 stage12RatioZZ = StageOnePTwoRatio("ZZ")
